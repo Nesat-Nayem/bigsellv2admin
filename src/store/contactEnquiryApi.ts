@@ -23,7 +23,7 @@ export const contactApi = createApi({
   reducerPath: 'contactApi',
   baseQuery: fetchBaseQuery({
     credentials: 'include',
-    baseUrl: 'https://api.bigsell.org/v1/api',
+    baseUrl: 'http://localhost:8080/v1/api',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as IRootState).auth.token
       if (token) {
