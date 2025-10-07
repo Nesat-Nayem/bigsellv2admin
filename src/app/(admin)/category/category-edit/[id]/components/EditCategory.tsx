@@ -36,10 +36,8 @@ const schema = yup.object().shape({
   title: yup.string().required('Please enter category title'),
   description: yup.string().optional(),
   parentId: yup.string().optional(),
-  icon: yup.string().optional(),
   seoTitle: yup.string().optional(),
   seoDescription: yup.string().optional(),
-  displayOrder: yup.number().optional().min(0, 'Display order must be positive')
 })
 
 const EditCategory = () => {
@@ -69,14 +67,17 @@ const EditCategory = () => {
   })
 
   // Hierarchical parent categories
-  const { data: categoryTree = [], isLoading: loadingParents } = useGetCategoryTreeQuery({ maxDepth: 5 })
+  const { data: categoryTree = [], isLoading: loadingParents } = useGetCategoryTreeQuery({ maxDepth: 2 })
 
   // Build flattened options with indentation
   const buildParentOptions = (nodes: ICategory[] = [], depth = 0): Array<{ id: string; label: string; level?: number }> => {
     const prefix = depth > 0 ? '— '.repeat(depth) : ''
     const list: Array<{ id: string; label: string; level?: number }> = []
     nodes.forEach((n) => {
-      list.push({ id: n._id, label: `${prefix}${n.title}`, level: n.level })
+      // allow selection only for parents with level <= 1
+      if (n.level === undefined || n.level <= 1) {
+        list.push({ id: n._id, label: `${prefix}${n.title}`, level: n.level })
+      }
       if (n.children && n.children.length > 0) {
         list.push(...buildParentOptions(n.children, depth + 1))
       }
@@ -99,10 +100,8 @@ const EditCategory = () => {
       title: '',
       description: '',
       parentId: '',
-      icon: '',
       seoTitle: '',
       seoDescription: '',
-      displayOrder: 0
     }
   })
 
@@ -113,10 +112,8 @@ const EditCategory = () => {
         title: category.title || '',
         description: category.description || '',
         parentId: category.parentId || '',
-        icon: category.icon || '',
         seoTitle: category.seoTitle || '',
         seoDescription: category.seoDescription || '',
-        displayOrder: category.displayOrder || 0
       })
       
       // Set attributes
@@ -202,10 +199,10 @@ const EditCategory = () => {
     if (values.description) formData.append('description', values.description)
     // Always send parentId so backend can set root when blank
     formData.append('parentId', values.parentId ? values.parentId : 'null')
-    if (values.icon) formData.append('icon', values.icon)
+    // icon removed
     if (values.seoTitle) formData.append('seoTitle', values.seoTitle)
     if (values.seoDescription) formData.append('seoDescription', values.seoDescription)
-    if (values.displayOrder !== undefined) formData.append('displayOrder', values.displayOrder.toString())
+    // displayOrder removed
     if (seoKeywords.length > 0) formData.append('seoKeywords', JSON.stringify(seoKeywords))
     if (attributes.length > 0) formData.append('attributes', JSON.stringify(attributes))
     if (image) formData.append('image', image)
@@ -335,35 +332,7 @@ const EditCategory = () => {
                   </Col>
                 </Row>
 
-                <Row>
-                  <Col lg={6}>
-                    <TextFormInput 
-                      control={control} 
-                      name="icon" 
-                      label="Icon Class" 
-                      placeholder="e.g., fas fa-tshirt" 
-                    />
-                    <small className="text-muted">FontAwesome or Solar icon class</small>
-                  </Col>
-                  <Col lg={6}>
-                    <div className="mb-3">
-                      <label className="form-label">Display Order</label>
-                      <Controller
-                        name="displayOrder"
-                        control={control}
-                        render={({ field }) => (
-                          <input 
-                            type="number" 
-                            className="form-control" 
-                            placeholder="0"
-                            min="0"
-                            {...field}
-                          />
-                        )}
-                      />
-                    </div>
-                  </Col>
-                </Row>
+                {/* Icon Class and Display Order removed as requested */}
               </CardBody>
             </Card>
 

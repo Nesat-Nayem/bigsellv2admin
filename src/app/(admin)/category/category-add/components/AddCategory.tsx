@@ -35,10 +35,8 @@ const schema = yup.object().shape({
   title: yup.string().required('Please enter category title'),
   description: yup.string().optional(),
   parentId: yup.string().optional(),
-  icon: yup.string().optional(),
   seoTitle: yup.string().optional(),
   seoDescription: yup.string().optional(),
-  displayOrder: yup.number().optional().min(0, 'Display order must be positive')
 })
 
 const AddCategory = () => {
@@ -54,15 +52,18 @@ const AddCategory = () => {
   const [showToast, setShowToast] = useState(false)
   const router = useRouter()
 
-  // Fetch full category tree (up to 5 levels) for parent selection
-  const { data: categoryTree = [], isLoading: loadingParents } = useGetCategoryTreeQuery({ maxDepth: 5 })
+  // Fetch category tree up to depth 2 for parent selection
+  const { data: categoryTree = [], isLoading: loadingParents } = useGetCategoryTreeQuery({ maxDepth: 2 })
 
   // Flatten tree into level-wise options for select input
   const buildParentOptions = (nodes: ICategory[] = [], depth = 0): Array<{ id: string; label: string; level?: number }> => {
     const prefix = depth > 0 ? '— '.repeat(depth) : ''
     const list: Array<{ id: string; label: string; level?: number }> = []
     nodes.forEach((n) => {
-      list.push({ id: n._id, label: `${prefix}${n.title}`, level: n.level })
+      // Allow selecting only parents with level <= 1 (so created child can be at most level 2)
+      if (n.level === undefined || n.level <= 1) {
+        list.push({ id: n._id, label: `${prefix}${n.title}`, level: n.level })
+      }
       if (n.children && n.children.length > 0) {
         list.push(...buildParentOptions(n.children, depth + 1))
       }
@@ -83,10 +84,8 @@ const AddCategory = () => {
       title: '',
       description: '',
       parentId: '',
-      icon: '',
       seoTitle: '',
       seoDescription: '',
-      displayOrder: 0
     }
   })
 
@@ -167,10 +166,8 @@ const AddCategory = () => {
         title: values.title,
         description: values.description || undefined,
         parentId: values.parentId || undefined,
-        icon: values.icon || undefined,
         seoTitle: values.seoTitle || undefined,
         seoDescription: values.seoDescription || undefined,
-        displayOrder: values.displayOrder || 0,
         seoKeywords: seoKeywords.length > 0 ? seoKeywords : undefined,
         attributes: attributes.length > 0 ? attributes : undefined,
         image: uploadedUrl,
@@ -268,35 +265,7 @@ const AddCategory = () => {
                   </Col>
                 </Row>
 
-                <Row>
-                  <Col lg={6}>
-                    <TextFormInput 
-                      control={control} 
-                      name="icon" 
-                      label="Icon Class" 
-                      placeholder="e.g., fas fa-tshirt" 
-                    />
-                    <small className="text-muted">FontAwesome or Solar icon class</small>
-                  </Col>
-                  <Col lg={6}>
-                    <div className="mb-3">
-                      <label className="form-label">Display Order</label>
-                      <Controller
-                        name="displayOrder"
-                        control={control}
-                        render={({ field }) => (
-                          <input 
-                            type="number" 
-                            className="form-control" 
-                            placeholder="0"
-                            min="0"
-                            {...field}
-                          />
-                        )}
-                      />
-                    </div>
-                  </Col>
-                </Row>
+                {/* Icon Class and Display Order removed as requested */}
               </CardBody>
             </Card>
 
