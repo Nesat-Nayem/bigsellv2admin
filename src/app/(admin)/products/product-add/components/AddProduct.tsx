@@ -219,10 +219,16 @@ const AddProduct = () => {
 
       // Get selected category's attributes
       const selectedCat = categories.find((cat: any) => cat._id === wc)
+      
+      console.log('Selected Category:', selectedCat)
+      console.log('Category Attributes:', (selectedCat as any)?.attributes)
 
       const nextAttrs: any[] = selectedCat && Array.isArray((selectedCat as any).attributes)
         ? ((selectedCat as any).attributes as any[])
         : []
+      
+      console.log('Setting Category Attributes:', nextAttrs)
+      
       setCategoryAttributes((prev) => {
         const sameRef = prev === nextAttrs
         const sameLen = Array.isArray(prev) && prev.length === nextAttrs.length

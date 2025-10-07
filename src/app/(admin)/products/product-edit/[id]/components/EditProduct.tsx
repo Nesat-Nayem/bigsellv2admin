@@ -295,6 +295,10 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
 
       // Get selected category's attributes
       const selectedCat = categories.find((cat) => cat._id === watchedCategory)
+      
+      console.log('[EditProduct] Selected Category:', selectedCat)
+      console.log('[EditProduct] Category Attributes:', selectedCat?.attributes)
+      
       if (selectedCat?.attributes) {
         setCategoryAttributes(selectedCat.attributes)
       } else {
@@ -676,36 +680,97 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
               </div>
             </div>
             {imageItems.length > 0 && (
-              <div className="mt-3 d-flex flex-wrap gap-2">
+              <div className="mt-3 d-flex flex-wrap gap-3">
                 {imageItems.map((it, idx) => (
-                  <div key={idx} className="d-flex flex-column align-items-center border rounded p-2" style={{ width: 130 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={it.preview} alt={`img-${idx}`} className="img-thumbnail" style={{ width: 100, height: 100, objectFit: 'cover' }} />
+                  <div key={idx} className="position-relative border rounded p-2 bg-light" style={{ width: 140 }}>
+                    {/* Image Preview */}
+                    <div className="d-flex justify-content-center mb-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={it.preview} alt={`img-${idx}`} className="img-thumbnail" style={{ width: 100, height: 100, objectFit: 'cover' }} />
+                    </div>
+                    
+                    {/* Progress Bar */}
                     {it.type === 'new' && it.status === 'uploading' && (
-                      <div className="progress mt-1 w-100" style={{ height: 6 }}>
+                      <div className="progress mb-2" style={{ height: 4 }}>
                         <div className="progress-bar" role="progressbar" style={{ width: `${it.progress || 0}%` }} aria-valuenow={it.progress || 0} aria-valuemin={0} aria-valuemax={100}></div>
                       </div>
                     )}
-                    <small className={`mt-1 ${it.status === 'error' ? 'text-danger' : 'text-muted'}`}>{it.status || 'idle'} {it.error ? `- ${it.error}` : ''}</small>
-                    <div className="d-flex gap-1 mt-1">
-                      <button type="button" className="btn btn-sm btn-light" onClick={() => moveLeft(idx)} disabled={idx === 0} title="Move Left">
-                        <IconifyIcon icon="solar:alt-arrow-left-linear" />
-                      </button>
-                      <button type="button" className="btn btn-sm btn-light" onClick={() => moveRight(idx)} disabled={idx === imageItems.length - 1} title="Move Right">
-                        <IconifyIcon icon="solar:alt-arrow-right-linear" />
-                      </button>
-                      {it.type === 'new' && it.status === 'uploading' ? (
-                        <button type="button" className="btn btn-sm btn-warning" onClick={() => cancelImageUpload(idx)} title="Cancel">
-                          Cancel
+                    
+                    {/* Status Text */}
+                    <div className="text-center mb-2">
+                      <small className={`${it.status === 'error' ? 'text-danger' : it.status === 'success' || it.status === 'existing' ? 'text-success' : 'text-muted'}`}>
+                        {it.status || 'idle'}
+                      </small>
+                      {it.error && (
+                        <div className="text-danger" style={{ fontSize: '10px' }} title={it.error}>
+                          Error occurred
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Control Buttons - Two rows for better spacing */}
+                    <div className="d-flex flex-column gap-1">
+                      {/* Row 1: Move and Delete buttons */}
+                      <div className="d-flex justify-content-center gap-1">
+                        <button 
+                          type="button" 
+                          className="btn btn-sm btn-light px-2" 
+                          onClick={() => moveLeft(idx)} 
+                          disabled={idx === 0} 
+                          title="Move Left"
+                          style={{ width: '32px', height: '28px' }}
+                        >
+                          <IconifyIcon icon="solar:alt-arrow-left-linear" className="fs-14" />
                         </button>
-                      ) : it.type === 'new' && (it.status === 'error' || it.status === 'canceled') ? (
-                        <button type="button" className="btn btn-sm btn-secondary" onClick={() => retryImageUpload(idx)} title="Retry">
-                          Retry
+                        <button 
+                          type="button" 
+                          className="btn btn-sm btn-light px-2" 
+                          onClick={() => moveRight(idx)} 
+                          disabled={idx === imageItems.length - 1} 
+                          title="Move Right"
+                          style={{ width: '32px', height: '28px' }}
+                        >
+                          <IconifyIcon icon="solar:alt-arrow-right-linear" className="fs-14" />
                         </button>
-                      ) : null}
-                      <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeImageAt(idx)} title="Remove">
-                        Remove
-                      </button>
+                        <button 
+                          type="button" 
+                          className="btn btn-sm px-2" 
+                          onClick={() => removeImageAt(idx)} 
+                          title="Remove Image"
+                          style={{ width: '32px', height: '28px', border: 'none', background: 'transparent' }}
+                        >
+                          <IconifyIcon icon="solar:trash-bin-minimalistic-broken" className="fs-14 text-danger" />
+                        </button>
+                      </div>
+                      
+                      {/* Row 2: Action buttons (Cancel/Retry) */}
+                      {it.type === 'new' && (it.status === 'uploading' || it.status === 'error' || it.status === 'canceled') && (
+                        <div className="d-flex justify-content-center">
+                          {it.status === 'uploading' ? (
+                            <button 
+                              type="button" 
+                              className="btn btn-sm btn-warning px-3" 
+                              onClick={() => cancelImageUpload(idx)} 
+                              title="Cancel Upload"
+                              style={{ fontSize: '11px', height: '26px' }}
+                            >
+                              <IconifyIcon icon="solar:close-circle-broken" className="me-1" />
+                              Cancel
+                            </button>
+                          ) : (it.status === 'error' || it.status === 'canceled') ? (
+                            <button 
+                              type="button" 
+                              className="btn btn-sm btn-secondary px-3" 
+                              onClick={() => retryImageUpload(idx)} 
+                              title="Retry Upload"
+                              style={{ fontSize: '11px', height: '26px' }}
+                            >
+                              <IconifyIcon icon="solar:restart-broken" className="me-1" />
+                              Retry
+                            </button>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -956,70 +1021,116 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
               </Row>
             )}
 
-            {/* Sizes and Colors Section */}
-            <Row className="mb-4">
-              <Col lg={4}>
-                <div className="mt-3">
-                  <h5 className="text-dark fw-medium">Size:</h5>
-                  <div className="d-flex flex-wrap gap-2" role="group" aria-label="Size selection">
-                    {sizeOptions.map((size: string) => (
-                      <div key={size}>
-                        <input
-                          type="checkbox"
-                          className="btn-check"
-                          id={`size-${size.toLowerCase().replace(/\s+/g, '-')}`}
-                          checked={selectedSizes.includes(size)}
-                          onChange={(e) => handleSizeChange(size, e.target.checked)}
-                        />
-                        <label
-                          className="btn btn-light avatar-sm rounded d-flex justify-content-center align-items-center"
-                          htmlFor={`size-${size.toLowerCase().replace(/\s+/g, '-')}`}>
-                          {size}
-                        </label>
+            {/* Sizes and Colors Section - Only show if attributes exist */}
+            {(() => {
+              // Check if category or subcategory has size/color attributes
+              const sizeAttribute = [...categoryAttributes, ...subcategoryAttributes].find(
+                (attr) => attr.name && (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'sizes'),
+              )
+              const colorAttribute = [...categoryAttributes, ...subcategoryAttributes].find(
+                (attr) => attr.name && (attr.name.toLowerCase() === 'color' || attr.name.toLowerCase() === 'colors'),
+              )
+
+              // Show section only if at least one attribute exists
+              const showSection = sizeAttribute || colorAttribute
+
+              if (!showSection) {
+                return null // Don't render anything if no size/color attributes
+              }
+
+              return (
+                <Row className="mb-4">
+                  {/* Size Section - Only show if size attribute exists */}
+                  {sizeAttribute && (
+                    <Col lg={colorAttribute ? 4 : 12}>
+                      <div className="mt-3">
+                        <h5 className="text-dark fw-medium">Size:</h5>
+                        <div className="d-flex flex-wrap gap-2" role="group" aria-label="Size selection">
+                          {(sizeAttribute.options || sizeOptions).map((size: string) => (
+                            <div key={size}>
+                              <input
+                                type="checkbox"
+                                className="btn-check"
+                                id={`size-${size.toLowerCase().replace(/\s+/g, '-')}`}
+                                checked={selectedSizes.includes(size)}
+                                onChange={(e) => handleSizeChange(size, e.target.checked)}
+                              />
+                              <label
+                                className="btn btn-light avatar-sm rounded d-flex justify-content-center align-items-center"
+                                htmlFor={`size-${size.toLowerCase().replace(/\s+/g, '-')}`}>
+                                {size}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedSizes.length > 0 && <small className="text-muted mt-1 d-block">Selected: {selectedSizes.join(', ')}</small>}
                       </div>
-                    ))}
-                  </div>
-                  {selectedSizes.length > 0 && <small className="text-muted mt-1 d-block">Selected: {selectedSizes.join(', ')}</small>}
-                </div>
-              </Col>
-              <Col lg={8}>
-                <div className="mt-3">
-                  <h5 className="text-dark fw-medium">Colors:</h5>
-                  <div className="d-flex flex-wrap gap-2" role="group" aria-label="Color selection">
-                    {colorOptions.map((color) => (
-                      <div key={color.value}>
-                        <input
-                          type="checkbox"
-                          className="btn-check"
-                          id={`color-${color.value}`}
-                          checked={selectedColors.includes(color.value)}
-                          onChange={(e) => handleColorChange(color.value, e.target.checked)}
-                        />
-                        <label
-                          className="btn btn-light avatar-sm rounded d-flex justify-content-center align-items-center"
-                          htmlFor={`color-${color.value}`}
-                          title={color.name}>
-                          <span>
-                            <IconifyIcon icon="bxs:circle" className={`fs-18 ${color.className}`} />
-                          </span>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  {selectedColors.length > 0 && (
-                    <small className="text-muted mt-1 d-block">
-                      Selected:{' '}
-                      {selectedColors
-                        .map((color) => {
-                          const defaultColor = colorOptions.find((c) => c.value === color)
-                          return defaultColor?.name || color
-                        })
-                        .join(', ')}
-                    </small>
+                    </Col>
                   )}
-                </div>
-              </Col>
-            </Row>
+
+                  {/* Color Section - Only show if color attribute exists */}
+                  {colorAttribute && (
+                    <Col lg={sizeAttribute ? 8 : 12}>
+                      <div className="mt-3">
+                        <h5 className="text-dark fw-medium">Colors:</h5>
+                        <div className="d-flex flex-wrap gap-2" role="group" aria-label="Color selection">
+                          {colorAttribute.options
+                            ? // Use category-specific colors
+                              colorAttribute.options.map((color: string) => (
+                                <div key={color}>
+                                  <input
+                                    type="checkbox"
+                                    className="btn-check"
+                                    id={`color-${color.toLowerCase().replace(/\s+/g, '-')}`}
+                                    checked={selectedColors.includes(color)}
+                                    onChange={(e) => handleColorChange(color, e.target.checked)}
+                                  />
+                                  <label
+                                    className="btn btn-light avatar-sm rounded d-flex justify-content-center align-items-center"
+                                    htmlFor={`color-${color.toLowerCase().replace(/\s+/g, '-')}`}
+                                    title={color}>
+                                    <span className="text-capitalize">{color}</span>
+                                  </label>
+                                </div>
+                              ))
+                            : // Use default color options with icons
+                              colorOptions.map((color) => (
+                                <div key={color.value}>
+                                  <input
+                                    type="checkbox"
+                                    className="btn-check"
+                                    id={`color-${color.value}`}
+                                    checked={selectedColors.includes(color.value)}
+                                    onChange={(e) => handleColorChange(color.value, e.target.checked)}
+                                  />
+                                  <label
+                                    className="btn btn-light avatar-sm rounded d-flex justify-content-center align-items-center"
+                                    htmlFor={`color-${color.value}`}
+                                    title={color.name}>
+                                    <span>
+                                      <IconifyIcon icon="bxs:circle" className={`fs-18 ${color.className}`} />
+                                    </span>
+                                  </label>
+                                </div>
+                              ))}
+                        </div>
+                        {selectedColors.length > 0 && (
+                          <small className="text-muted mt-1 d-block">
+                            Selected:{' '}
+                            {selectedColors
+                              .map((color) => {
+                                const defaultColor = colorOptions.find((c) => c.value === color)
+                                return defaultColor?.name || color
+                              })
+                              .join(', ')}
+                          </small>
+                        )}
+                      </div>
+                    </Col>
+                  )}
+                </Row>
+              )
+            })()}
 
             {/* Description Fields */}
             <Row>
@@ -1107,41 +1218,81 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
                 <input {...register('weight')} type="number" placeholder="Weight" className="form-control" />
               </Col>
             </Row>
+            <Row>
+              <Col className="mb-3">
+                <label>Length (cm)</label>
+                <input {...register('dimensions.length')} type="number" step="0.01" placeholder="Length" className="form-control" />
+              </Col>
+              <Col className="mb-3">
+                <label>Width (cm)</label>
+                <input {...register('dimensions.width')} type="number" step="0.01" placeholder="Width" className="form-control" />
+              </Col>
+              <Col className="mb-3">
+                <label>Height (cm)</label>
+                <input {...register('dimensions.height')} type="number" step="0.01" placeholder="Height" className="form-control" />
+              </Col>
+            </Row>
           </CardBody>
         </Card>
 
-        {/* Product Status */}
+        {/* Shipping Info */}
         <Card>
           <CardHeader>
-            <CardTitle as="h4">Status & Settings</CardTitle>
+            <CardTitle as="h4">Shipping Information</CardTitle>
           </CardHeader>
           <CardBody>
             <Row>
-              <Col lg={3}>
-                <label>Status</label>
-                <select {...register('status')} className="form-control">
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+              <Col lg={3} className="mb-3">
+                <label>Shipping Weight (kg)</label>
+                <input {...register('shippingInfo.weight')} type="number" step="0.01" placeholder="Weight" className="form-control" />
               </Col>
-              <Col lg={3}>
-                <div className="form-check mt-4">
+              <Col lg={3} className="mb-3">
+                <label>Shipping Cost</label>
+                <input {...register('shippingInfo.shippingCost')} type="number" step="0.01" placeholder="Cost" className="form-control" />
+              </Col>
+              <Col lg={3} className="mb-3">
+                <label>Estimated Delivery</label>
+                <input {...register('shippingInfo.estimatedDelivery')} placeholder="e.g., 3-5 days" className="form-control" />
+              </Col>
+              <Col lg={3} className="mb-3">
+                <div className="mt-4">
+                  <div className="form-check">
+                    <input type="checkbox" {...register('shippingInfo.freeShipping')} className="form-check-input" id="freeShipping" />
+                    <label className="form-check-label" htmlFor="freeShipping">
+                      Free Shipping
+                    </label>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </CardBody>
+        </Card>
+
+        {/* Product Flags */}
+        <Card>
+          <CardHeader>
+            <CardTitle as="h4">Product Flags</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <Row>
+              <Col lg={4}>
+                <div className="form-check">
                   <input type="checkbox" {...register('isFeatured')} className="form-check-input" id="isFeatured" />
                   <label className="form-check-label" htmlFor="isFeatured">
                     Featured Product
                   </label>
                 </div>
               </Col>
-              <Col lg={3}>
-                <div className="form-check mt-4">
+              <Col lg={4}>
+                <div className="form-check">
                   <input type="checkbox" {...register('isTrending')} className="form-check-input" id="isTrending" />
                   <label className="form-check-label" htmlFor="isTrending">
                     Trending Product
                   </label>
                 </div>
               </Col>
-              <Col lg={3}>
-                <div className="form-check mt-4">
+              <Col lg={4}>
+                <div className="form-check">
                   <input type="checkbox" {...register('isNewArrival')} className="form-check-input" id="isNewArrival" />
                   <label className="form-check-label" htmlFor="isNewArrival">
                     New Arrival

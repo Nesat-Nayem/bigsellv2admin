@@ -18,7 +18,11 @@ interface ProductRowProps extends IProduct {
   onDelete: (id: string) => void
 }
 
-const ProductRow: React.FC<ProductRowProps> = ({ _id, name, price, category, images, sizes, stockLeft, stockSold, onEdit, onDelete }) => {
+const ProductRow: React.FC<ProductRowProps> = ({ _id, name, price, category, brand, images, sizes, colors, specifications, stockLeft, stockSold, onEdit, onDelete }) => {
+  // Get brand from specifications if not in brand field
+  const displayBrand = brand || (specifications && typeof specifications === 'object' ? 
+    (specifications as any)?.brand || (specifications as any)?.Brand : null)
+  
   return (
     <tr>
       <td>
@@ -36,10 +40,21 @@ const ProductRow: React.FC<ProductRowProps> = ({ _id, name, price, category, ima
             <Link href={`/products/${_id}`} className="text-dark fw-medium fs-15">
               {name}
             </Link>
-            <p className="text-muted mb-0 mt-1 fs-13">
-              <span>Size: </span>
-              {sizes?.[0] || 'N/A'}
-            </p>
+            {displayBrand && (
+              <p className="text-muted mb-0 mt-1 fs-13">
+                <span className="fw-medium">Brand:</span> {displayBrand}
+              </p>
+            )}
+            {sizes && sizes.length > 0 && (
+              <p className="text-muted mb-0 mt-1 fs-13">
+                <span className="fw-medium">Sizes:</span> {sizes.slice(0, 3).join(', ')}{sizes.length > 3 ? '...' : ''}
+              </p>
+            )}
+            {colors && colors.length > 0 && (
+              <p className="text-muted mb-0 mt-1 fs-13">
+                <span className="fw-medium">Colors:</span> {colors.slice(0, 3).join(', ')}{colors.length > 3 ? '...' : ''}
+              </p>
+            )}
           </div>
         </div>
       </td>
@@ -234,7 +249,7 @@ const ProductList: React.FC = () => {
                   <label className="form-check-label" htmlFor="checkAll" />
                 </div>
               </th>
-              <th>Product Name & Size</th>
+              <th>Product Details</th>
               <th>Price</th>
               <th>Stock</th>
               <th>Category</th>
