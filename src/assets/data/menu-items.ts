@@ -37,6 +37,13 @@ export const MENU_ITEMS: MenuItemType[] = [
     ],
   },
   {
+    key: 'home-categories',
+    label: 'Home Categories',
+    icon: 'solar:clipboard-list-bold-duotone',
+    url: '/home-categories',
+    allowedRoles: ['admin'], 
+  },
+  {
     key: 'category',
     icon: 'solar:clipboard-list-bold-duotone',
     label: 'Category Management',
