@@ -1,6 +1,6 @@
 'use client'
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
-import { useGetCategoryTreeQuery, useGetChildrenByParentQuery } from '@/store/productCategoryApi'
+import { useGetCategoryTreeQuery, useGetChildrenByParentQuery, useGetCategoryByIdQuery } from '@/store/productCategoryApi'
 import { useCreateProductMutation } from '@/store/productsApi'
 import React, { useState, useEffect, useMemo } from 'react'
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'react-bootstrap'
@@ -22,6 +22,7 @@ interface FormValues {
   sku: string
   category: string
   subcategory: string
+  subSubcategory: string
   brand: string
   images: string[] // Changed from File[] to string[]
   thumbnail: string
@@ -64,6 +65,7 @@ const AddProduct = () => {
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([])
   const [categoryAttributes, setCategoryAttributes] = useState<any[]>([])
   const [subcategoryAttributes, setSubcategoryAttributes] = useState<any[]>([])
+  const [subSubcategoryAttributes, setSubSubcategoryAttributes] = useState<any[]>([])
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([])
   const [selectedThumbnailFile, setSelectedThumbnailFile] = useState<File | null>(null)
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
@@ -84,8 +86,10 @@ const AddProduct = () => {
   const token = useSelector((s: IRootState) => (s as any)?.auth?.token)
   const role = useSelector((s: IRootState) => (s as any)?.auth?.user?.role)
 
-  // Get main categories from tree (root level categories)
-  const { data: categoryTree = [], isLoading: categoriesLoading, error: categoryError } = useGetCategoryTreeQuery()
+  console.log("Category attributs ca", categoryAttributes)
+
+  // Get main categories from tree (root level categories), limit depth to 2
+  const { data: categoryTree = [], isLoading: categoriesLoading, error: categoryError } = useGetCategoryTreeQuery({ maxDepth: 2 })
   const categories = useMemo(() => (categoryTree || []).filter((cat: any) => !cat.parentId), [categoryTree])
 
   // Debug logs: log once after categories load to avoid render-loop spam
@@ -126,6 +130,7 @@ const AddProduct = () => {
       sku: '',
       category: '',
       subcategory: '',
+      subSubcategory: '',
       brand: '',
       images: [],
       thumbnail: '',
@@ -157,9 +162,20 @@ const AddProduct = () => {
   // Watch category and subcategory changes
   const watchedCategory = watch('category')
   const watchedSubcategory = watch('subcategory')
+  const watchedSubSubcategory = watch('subSubcategory')
   const watchedName = watch('name')
   const watchedDescription = watch('description')
   const watchedPrice = watch('price')
+  const prevSubcategoryRef = React.useRef<string | null>(null)
+
+  // Fetch sub-subcategories when subcategory is selected
+  const { data: subSubcategories = [], isLoading: subSubcategoriesLoading } = useGetChildrenByParentQuery(
+    watchedSubcategory || '',
+    { skip: !watchedSubcategory }
+  )
+
+  // Fetch full category details (with attributes) for the selected root category
+  const { data: selectedCategoryDetails } = useGetCategoryByIdQuery(watchedCategory || '', { skip: !watchedCategory })
 
   // Function to generate SKU from product name
   const generateSKU = (productName: string): string => {
@@ -207,47 +223,44 @@ const AddProduct = () => {
     }
   }, [watchedName, setValue])
 
-  // Update selected category and get category attributes
+  // Update selected category, reset dependent selections
   useEffect(() => {
     const wc = String(watchedCategory || '')
     if (wc !== selectedCategoryId) {
       setSelectedCategoryId(wc)
-      // Reset subcategory only if not already empty
-      if (watchedSubcategory) {
-        setValue('subcategory', '')
-      }
-
-      // Get selected category's attributes
-      const selectedCat = categories.find((cat: any) => cat._id === wc)
-      
-      console.log('Selected Category:', selectedCat)
-      console.log('Category Attributes:', (selectedCat as any)?.attributes)
-
-      const nextAttrs: any[] = selectedCat && Array.isArray((selectedCat as any).attributes)
-        ? ((selectedCat as any).attributes as any[])
-        : []
-      
-      console.log('Setting Category Attributes:', nextAttrs)
-      
-      setCategoryAttributes((prev) => {
-        const sameRef = prev === nextAttrs
-        const sameLen = Array.isArray(prev) && prev.length === nextAttrs.length
-        const sameItems = sameLen && prev.every((v, i) => v === nextAttrs[i])
-        return sameRef || sameItems ? prev : nextAttrs
-      })
+      // Reset subcategory and sub-subcategory when category changes
+      if (watchedSubcategory) setValue('subcategory', '')
+      if (watchedSubSubcategory) setValue('subSubcategory', '')
     }
-  }, [watchedCategory, watchedSubcategory, selectedCategoryId, setValue, categories])
+  }, [watchedCategory, watchedSubcategory, watchedSubSubcategory, selectedCategoryId, setValue])
+
+  // Set category attributes from detailed category fetch
+  useEffect(() => {
+    const nextAttrs: any[] = selectedCategoryDetails && Array.isArray((selectedCategoryDetails as any).attributes)
+      ? ((selectedCategoryDetails as any).attributes as any[])
+      : []
+    setCategoryAttributes((prev) => {
+      const sameRef = prev === nextAttrs
+      const sameLen = Array.isArray(prev) && prev.length === nextAttrs.length
+      const sameItems = sameLen && prev.every((v, i) => v === nextAttrs[i])
+      return sameRef || sameItems ? prev : nextAttrs
+    })
+  }, [selectedCategoryDetails])
 
   // Update subcategory attributes when subcategory changes
-  // Guard against redundant updates to avoid render loops when `subcategories` ref changes frequently
+  // Clear sub-subcategory only when subcategory actually changes
   useEffect(() => {
+    if (prevSubcategoryRef.current !== (watchedSubcategory || null)) {
+      setValue('subSubcategory', '')
+      prevSubcategoryRef.current = watchedSubcategory || null
+    }
+
     if (watchedSubcategory) {
       const selectedSubcat = subcategories.find((cat) => cat._id === watchedSubcategory)
       const attrs: any[] = selectedSubcat && Array.isArray((selectedSubcat as any).attributes)
         ? ((selectedSubcat as any).attributes as any[])
         : []
       setSubcategoryAttributes((prev) => {
-        // shallow compare by reference and by items order
         const sameRef = prev === attrs
         const sameLen = Array.isArray(prev) && prev.length === attrs.length
         const sameItems = sameLen && prev.every((v, i) => v === attrs[i])
@@ -256,7 +269,25 @@ const AddProduct = () => {
     } else {
       setSubcategoryAttributes((prev) => (Array.isArray(prev) && prev.length === 0 ? prev : []))
     }
-  }, [watchedSubcategory, subcategories])
+  }, [watchedSubcategory, subcategories, setValue])
+
+  // Update sub-subcategory attributes when sub-subcategory changes
+  useEffect(() => {
+    if (watchedSubSubcategory) {
+      const selectedSubSubcat = subSubcategories.find((cat: any) => cat._id === watchedSubSubcategory)
+      const attrs: any[] = selectedSubSubcat && Array.isArray((selectedSubSubcat as any).attributes)
+        ? ((selectedSubSubcat as any).attributes as any[])
+        : []
+      setSubSubcategoryAttributes((prev) => {
+        const sameRef = prev === attrs
+        const sameLen = Array.isArray(prev) && prev.length === attrs.length
+        const sameItems = sameLen && prev.every((v, i) => v === attrs[i])
+        return sameRef || sameItems ? prev : attrs
+      })
+    } else {
+      setSubSubcategoryAttributes((prev) => (Array.isArray(prev) && prev.length === 0 ? prev : []))
+    }
+  }, [watchedSubSubcategory, subSubcategories])
 
   // Update form values when selections change
   useEffect(() => {
@@ -621,6 +652,7 @@ const AddProduct = () => {
         sku: values.sku,
         ...(values.category ? { category: values.category } : {}),
         ...(values.subcategory ? { subcategory: values.subcategory } : {}),
+        ...((values as any).subSubcategory ? { subSubcategory: (values as any).subSubcategory } : {}),
         ...(values.brand ? { brand: values.brand } : {}),
         images: imageUrls,
         thumbnail: thumbnailUrl,
@@ -746,6 +778,7 @@ const AddProduct = () => {
                       <div className="progress-bar" role="progressbar" style={{ width: `${imageProgress[idx] || 0}%` }} aria-valuenow={imageProgress[idx] || 0} aria-valuemin={0} aria-valuemax={100}></div>
                     </div>
                   )}
+
                   
                   {/* Status Text */}
                   <div className="text-center mb-2">
@@ -985,6 +1018,22 @@ const AddProduct = () => {
               </Col>
             </Row>
 
+            <Row>
+              <Col lg={6} className="mb-3">
+                <label>Sub-SubCategory</label>
+                <select {...register('subSubcategory')} className="form-control" disabled={!watchedSubcategory || subSubcategoriesLoading}>
+                  <option value="">Select Sub-SubCategory</option>
+                  {subSubcategories.map((subsub) => (
+                    <option key={subsub._id} value={subsub._id}>
+                      {subsub.title}
+                    </option>
+                  ))}
+                </select>
+                {subSubcategoriesLoading && <small className="text-muted">Loading sub-subcategories...</small>}
+                {!watchedSubcategory && <small className="text-muted">Please select a subcategory first</small>}
+              </Col>
+            </Row>
+
             {/* Dynamic Category Attributes */}
             {categoryAttributes && categoryAttributes.length > 0 && (
               <Row>
@@ -1128,13 +1177,84 @@ const AddProduct = () => {
               </Row>
             )}
 
+            {/* Dynamic Sub-Subcategory Attributes */}
+            {subSubcategoryAttributes.length > 0 && (
+              <Row>
+                <Col lg={12}>
+                  <h5 className="mt-3 mb-3">Sub-Subcategory Specific Attributes</h5>
+                </Col>
+                {subSubcategoryAttributes.map((attribute, index) => {
+                  // Skip if it's sizes or colors (handled separately)
+                  if (
+                    attribute.name.toLowerCase() === 'size' ||
+                    attribute.name.toLowerCase() === 'sizes' ||
+                    attribute.name.toLowerCase() === 'color' ||
+                    attribute.name.toLowerCase() === 'colors'
+                  ) {
+                    return null
+                  }
+
+                  return (
+                    <Col lg={6} key={`subsubcat-attr-${index}`} className="mb-3">
+                      <label>
+                        {attribute.name}
+                        {attribute.required && <span className="text-danger">*</span>}
+                      </label>
+
+                      {attribute.type === 'select' && attribute.options ? (
+                        <select
+                          {...register(`categoryAttributes.${attribute.name}`, {
+                            required: attribute.required ? `${attribute.name} is required` : false,
+                          })}
+                          className="form-control">
+                          <option value="">Select {attribute.name}</option>
+                          {attribute.options.map((option: string) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : attribute.type === 'text' ? (
+                        <input
+                          {...register(`categoryAttributes.${attribute.name}`, {
+                            required: attribute.required ? `${attribute.name} is required` : false,
+                          })}
+                          type="text"
+                          className="form-control"
+                          placeholder={`Enter ${attribute.name}`}
+                        />
+                      ) : attribute.type === 'number' ? (
+                        <input
+                          {...register(`categoryAttributes.${attribute.name}`, {
+                            required: attribute.required ? `${attribute.name} is required` : false,
+                          })}
+                          type="number"
+                          className="form-control"
+                          placeholder={`Enter ${attribute.name}`}
+                        />
+                      ) : attribute.type === 'textarea' ? (
+                        <textarea
+                          {...register(`categoryAttributes.${attribute.name}`, {
+                            required: attribute.required ? `${attribute.name} is required` : false,
+                          })}
+                          className="form-control"
+                          rows={3}
+                          placeholder={`Enter ${attribute.name}`}
+                        />
+                      ) : null}
+                    </Col>
+                  )
+                })}
+              </Row>
+            )}
+
             {/* Sizes and Colors Section - Only show if attributes exist */}
             {(() => {
-              // Check if category or subcategory has size/color attributes
-              const sizeAttribute = [...categoryAttributes, ...subcategoryAttributes].find(
+              // Check if category or subcategory or sub-subcategory has size/color attributes
+              const sizeAttribute = [...categoryAttributes, ...subcategoryAttributes, ...subSubcategoryAttributes].find(
                 (attr) => attr.name && (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'sizes'),
               )
-              const colorAttribute = [...categoryAttributes, ...subcategoryAttributes].find(
+              const colorAttribute = [...categoryAttributes, ...subcategoryAttributes, ...subSubcategoryAttributes].find(
                 (attr) => attr.name && (attr.name.toLowerCase() === 'color' || attr.name.toLowerCase() === 'colors'),
               )
 

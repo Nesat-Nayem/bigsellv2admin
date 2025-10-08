@@ -27,6 +27,10 @@ export interface IProduct {
     _id: string
     title: string
   } | string
+  subSubcategory?: {
+    _id: string
+    title: string
+  } | string
   brand?: string
   images?: string[]
   thumbnail?: string
