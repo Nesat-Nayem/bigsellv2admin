@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Button, Card, Col, Form, Modal, Row, Spinner, Table, Toast, ToastContainer } from 'react-bootstrap'
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
@@ -11,6 +11,11 @@ import {
   useDeleteCategoryMutation,
   ICategory,
 } from '@/store/categoryApi'
+import {
+  useGetRootCategoriesQuery as useGetProductRootCategoriesQuery,
+  useGetChildrenByParentQuery as useGetProductChildrenByParentQuery,
+  ICategory as IProductCategory,
+} from '@/store/productCategoryApi'
 
 const HomeCategories: React.FC = () => {
   // Queries & Mutations
@@ -27,15 +32,32 @@ const HomeCategories: React.FC = () => {
   const [selected, setSelected] = useState<ICategory | null>(null)
   const [title, setTitle] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [pcategoryId, setPcategoryId] = useState<string>('')
+  const [psubcategoryId, setPsubcategoryId] = useState<string>('')
+  const [psubSubcategoryId, setPsubSubcategoryId] = useState<string>('')
 
   // Toast state
   const [toast, setToast] = useState<{ msg: string; bg: 'success' | 'danger' } | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  // Product Category sources
+  const { data: rootProductCategories = [] } = useGetProductRootCategoriesQuery()
+  const { data: childProductCategories = [], isLoading: loadingSubcats } = useGetProductChildrenByParentQuery(
+    pcategoryId,
+    { skip: !pcategoryId }
+  )
+  const { data: subSubProductCategories = [], isLoading: loadingSubSubcats } = useGetProductChildrenByParentQuery(
+    psubcategoryId,
+    { skip: !psubcategoryId }
+  )
+
   const handleOpenCreate = () => {
     setTitle('')
     setFile(null)
+    setPcategoryId('')
+    setPsubcategoryId('')
+    setPsubSubcategoryId('')
     setShowCreate(true)
   }
 
@@ -43,6 +65,9 @@ const HomeCategories: React.FC = () => {
     setSelected(cat)
     setTitle(cat.title)
     setFile(null)
+    setPcategoryId((cat as any).productCategory || '')
+    setPsubcategoryId((cat as any).productSubcategory || '')
+    setPsubSubcategoryId((cat as any).productSubSubcategory || '')
     setShowEdit(true)
   }
 
@@ -65,11 +90,18 @@ const HomeCategories: React.FC = () => {
       setToast({ msg: 'Please select an image', bg: 'danger' })
       return
     }
+    if (!pcategoryId) {
+      setToast({ msg: 'Product Category is required', bg: 'danger' })
+      return
+    }
 
     try {
       const form = new FormData()
       form.append('title', title.trim())
       form.append('image', file)
+      form.append('productCategory', pcategoryId)
+      if (psubcategoryId) form.append('productSubcategory', psubcategoryId)
+      if (psubSubcategoryId) form.append('productSubSubcategory', psubSubcategoryId)
       await createCategory(form).unwrap()
       setToast({ msg: 'Category created', bg: 'success' })
       resetModals()
@@ -92,6 +124,10 @@ const HomeCategories: React.FC = () => {
       const form = new FormData()
       if (title.trim()) form.append('title', title.trim())
       if (file) form.append('image', file)
+      if (pcategoryId) form.append('productCategory', pcategoryId)
+      // Note: if user clears sub selections, omit keys to keep unchanged
+      if (psubcategoryId) form.append('productSubcategory', psubcategoryId)
+      if (psubSubcategoryId) form.append('productSubSubcategory', psubSubcategoryId)
       await updateCategory({ id: selected._id, data: form }).unwrap()
       setToast({ msg: 'Category updated', bg: 'success' })
       resetModals()
@@ -225,6 +261,33 @@ const HomeCategories: React.FC = () => {
                   }}
                 />
               </Col>
+              <Col md={12}>
+                <Form.Label>Product Category <span className="text-danger">*</span></Form.Label>
+                <Form.Select value={pcategoryId} onChange={(e) => { setPcategoryId(e.target.value); setPsubcategoryId(''); setPsubSubcategoryId(''); }}>
+                  <option value="">Select Category</option>
+                  {(rootProductCategories as IProductCategory[]).map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={12}>
+                <Form.Label>Subcategory</Form.Label>
+                <Form.Select value={psubcategoryId} onChange={(e) => { setPsubcategoryId(e.target.value); setPsubSubcategoryId(''); }} disabled={!pcategoryId || loadingSubcats}>
+                  <option value="">Select Subcategory (optional)</option>
+                  {(childProductCategories as IProductCategory[]).map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={12}>
+                <Form.Label>Sub-Subcategory</Form.Label>
+                <Form.Select value={psubSubcategoryId} onChange={(e) => setPsubSubcategoryId(e.target.value)} disabled={!psubcategoryId || loadingSubSubcats}>
+                  <option value="">Select Sub-Subcategory (optional)</option>
+                  {(subSubProductCategories as IProductCategory[]).map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
+                </Form.Select>
+              </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
@@ -265,6 +328,33 @@ const HomeCategories: React.FC = () => {
                     {renderImage(selected.image)}
                   </div>
                 ) : null}
+              </Col>
+              <Col md={12}>
+                <Form.Label>Product Category <span className="text-danger">*</span></Form.Label>
+                <Form.Select value={pcategoryId} onChange={(e) => { setPcategoryId(e.target.value); setPsubcategoryId(''); setPsubSubcategoryId(''); }}>
+                  <option value="">Select Category</option>
+                  {(rootProductCategories as IProductCategory[]).map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={12}>
+                <Form.Label>Subcategory</Form.Label>
+                <Form.Select value={psubcategoryId} onChange={(e) => { setPsubcategoryId(e.target.value); setPsubSubcategoryId(''); }} disabled={!pcategoryId || loadingSubcats}>
+                  <option value="">Select Subcategory (optional)</option>
+                  {(childProductCategories as IProductCategory[]).map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={12}>
+                <Form.Label>Sub-Subcategory</Form.Label>
+                <Form.Select value={psubSubcategoryId} onChange={(e) => setPsubSubcategoryId(e.target.value)} disabled={!psubcategoryId || loadingSubSubcats}>
+                  <option value="">Select Sub-Subcategory (optional)</option>
+                  {(subSubProductCategories as IProductCategory[]).map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ))}
+                </Form.Select>
               </Col>
             </Row>
           </Modal.Body>

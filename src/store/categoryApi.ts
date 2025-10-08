@@ -5,6 +5,10 @@ export interface ICategory {
   _id: string
   title: string
   image: File | string
+  // Links to ProductCategory
+  productCategory?: string
+  productSubcategory?: string | null
+  productSubSubcategory?: string | null
   isDeleted: boolean
   createdAt: string
   updatedAt: string
