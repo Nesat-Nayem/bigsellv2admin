@@ -234,10 +234,39 @@ const ProductDetails = () => {
                 <p className="text-muted">{renderTitle(product.subcategory as any)}</p>
               </Col>
               <Col md={6}>
+                <h5 className="text-dark fw-medium">Sub-Subcategory</h5>
+                <p className="text-muted">{renderTitle((product as any).subSubcategory as any)}</p>
+              </Col>
+              <Col md={6}>
                 <h5 className="text-dark fw-medium">Brand</h5>
                 <p className="text-muted">{renderTitle(product.brand as any)}</p>
               </Col>
             </Row>
+
+            {(() => {
+              let entries: Array<[string, string]> = []
+              const specs: any = (product as any).specifications
+              if (specs && typeof specs === 'object' && !Array.isArray(specs)) {
+                entries = Object.entries(specs as Record<string, string>)
+              } else if (Array.isArray(specs)) {
+                entries = (specs as any[])
+                  .filter((i: any) => i && i.key)
+                  .map((i: any) => [String(i.key), String(i.value ?? '')])
+              }
+              if (entries.length === 0) return null
+              return (
+                <>
+                  <h4 className="text-dark fw-medium mt-3">Specifications</h4>
+                  <ul className="list-unstyled">
+                    {entries.map(([k, v], idx) => (
+                      <li key={idx}>
+                        <strong>{k}:</strong> {v}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )
+            })()}
 
             {product.shortDescription && (
               <>

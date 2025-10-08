@@ -151,8 +151,8 @@ export const productsApi = createApi({
       const token = state?.auth?.token
       const user = state?.auth?.user
 
-      console.log('Products API - Token:', token ? 'Present' : 'Missing')
-      console.log('Products API - User:', user)
+      // console.log('Products API - Token:', token ? 'Present' : 'Missing')
+      // console.log('Products API - User:', user)
 
       if (token) {
         headers.set('Authorization', `Bearer ${token}`)
@@ -168,7 +168,7 @@ export const productsApi = createApi({
         headers.set('X-User-Role', user.role)
       }
 
-      console.log('Products API - Headers:', Object.fromEntries(headers))
+      // console.log('Products API - Headers:', Object.fromEntries(headers))
       return headers
     },
   }),

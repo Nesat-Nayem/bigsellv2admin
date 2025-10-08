@@ -1,6 +1,6 @@
 'use client'
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
-import { useGetCategoryTreeQuery, useGetChildrenByParentQuery } from '@/store/productCategoryApi'
+import { useGetCategoryTreeQuery, useGetChildrenByParentQuery, useGetCategoryByIdQuery } from '@/store/productCategoryApi'
 import { useGetProductByIdQuery, useUpdateProductMutation, IProduct } from '@/store/productsApi'
 import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'react-bootstrap'
@@ -22,6 +22,7 @@ interface FormValues {
   sku: string
   category: string
   subcategory: string
+  subSubcategory: string
   brand: string
   images: string[]
   thumbnail: string
@@ -68,6 +69,7 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [categoryAttributes, setCategoryAttributes] = useState<any[]>([])
   const [subcategoryAttributes, setSubcategoryAttributes] = useState<any[]>([])
+  const [subSubcategoryAttributes, setSubSubcategoryAttributes] = useState<any[]>([])
   const didInitFromTree = useRef(false)
   // Image management: combined list of existing and new items
   type ImageItem = {
@@ -92,12 +94,13 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
   // Get product data
   const { data: product, isLoading: productLoading, error: productError } = useGetProductByIdQuery(productId)
   
-  // Get category tree and derive root categories
-  const { data: categoryTree = [], isLoading: categoriesLoading } = useGetCategoryTreeQuery()
+  // Get category tree and derive root categories (limit depth 2)
+  const { data: categoryTree = [], isLoading: categoriesLoading } = useGetCategoryTreeQuery({ maxDepth: 2 })
   const categories = (categoryTree || []).filter((cat: any) => !cat.parentId)
   
   // Get subcategories based on selected category
   const { data: subcategories = [], isLoading: subcategoriesLoading } = useGetChildrenByParentQuery(selectedCategoryId, { skip: !selectedCategoryId })
+  // (moved) Get sub-subcategories when subcategory is selected — placed after useForm/watch
 
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation()
 
@@ -120,6 +123,7 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
       sku: '',
       category: '',
       subcategory: '',
+      subSubcategory: '',
       brand: '',
       images: [],
       thumbnail: '',
@@ -150,6 +154,17 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
 
   const watchedCategory = watch('category')
   const watchedSubcategory = watch('subcategory')
+  const watchedSubSubcategory = watch('subSubcategory')
+  const prevSubcategoryRef = useRef<string | null>(null)
+
+  // Get sub-subcategories when subcategory is selected
+  const { data: subSubcategories = [], isLoading: subSubcategoriesLoading } = useGetChildrenByParentQuery(
+    watchedSubcategory || '',
+    { skip: !watchedSubcategory }
+  )
+
+  // Fetch full category details (with attributes) for root category
+  const { data: selectedCategoryDetails } = useGetCategoryByIdQuery(watchedCategory || '', { skip: !watchedCategory })
 
   // Populate form when product data is loaded
   useEffect(() => {
@@ -168,6 +183,7 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
         sku: product.sku || '',
         category: (product.category as any)?._id || product.category || '',
         subcategory: (product.subcategory as any)?._id || (typeof product.subcategory === 'string' ? product.subcategory : ''),
+        subSubcategory: (product as any).subSubcategory ? ((product as any).subSubcategory as any)._id || (typeof (product as any).subSubcategory === 'string' ? (product as any).subSubcategory : '') : '',
         brand: product.brand || '',
         images: product.images || [],
         thumbnail: product.thumbnail || '',
@@ -218,6 +234,10 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
       const categoryId = (product.category as any)?._id || product.category || ''
       setSelectedCategoryId(categoryId)
 
+      // Prime previous subcategory ref to avoid clearing subSubcategory on first initialization
+      const initialSubId = (product.subcategory as any)?._id || (typeof product.subcategory === 'string' ? product.subcategory : '')
+      ;(prevSubcategoryRef as any).current = initialSubId || null
+
       // Initialize images list (existing)
       const initialImages: ImageItem[] = (product.images || []).map((u) => ({
         type: 'existing',
@@ -233,7 +253,7 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
     }
   }, [product, reset])
 
-  // When category tree is ready, normalize category/subcategory to root+first child so UI can auto-select reliably
+  // When category tree is ready, normalize category/subcategory/subSubcategory so UI can auto-select reliably
   const findPathToId = (nodes: any[], targetId: string, path: any[] = []): any[] | null => {
     for (const node of nodes || []) {
       const nextPath = [...path, node]
@@ -253,21 +273,19 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
 
     const prodCatId = (product.category as any)?._id || (typeof product.category === 'string' ? product.category : '')
     const prodSubId = (product.subcategory as any)?._id || (typeof product.subcategory === 'string' ? product.subcategory : '')
+    const prodSubSubId = ((product as any).subSubcategory as any)?._id || (typeof (product as any).subSubcategory === 'string' ? (product as any).subSubcategory : '')
 
     let finalCategoryId = ''
     let finalSubId = ''
+    let finalSubSubId = ''
 
-    if (prodSubId) {
-      const path = findPathToId(tree, String(prodSubId))
+    const targetId = prodSubSubId || prodSubId || prodCatId
+    if (targetId) {
+      const path = findPathToId(tree, String(targetId))
       if (path && path.length >= 1) {
-        finalCategoryId = String(path[0]._id)
+        finalCategoryId = String(path[0]?._id || '')
         finalSubId = path[1] ? String(path[1]._id) : ''
-      }
-    } else if (prodCatId) {
-      const path = findPathToId(tree, String(prodCatId))
-      if (path && path.length >= 1) {
-        finalCategoryId = String(path[0]._id)
-        finalSubId = path[1] ? String(path[1]._id) : ''
+        finalSubSubId = path[2] ? String(path[2]._id) : ''
       }
     }
 
@@ -275,51 +293,66 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
       setValue('category', finalCategoryId)
       setSelectedCategoryId(finalCategoryId)
     }
-    if (finalSubId) {
-      setValue('subcategory', finalSubId)
-    }
+    if (finalSubId) setValue('subcategory', finalSubId)
+    if (finalSubSubId) setValue('subSubcategory', finalSubSubId)
 
     didInitFromTree.current = true
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryTree, product])
 
-  // Update selected category and get category attributes
+  // Update selected category and reset dependent selections (skip during initial normalization)
   useEffect(() => {
-    if (watchedCategory && watchedCategory !== selectedCategoryId) {
-      const wasEmpty = !selectedCategoryId
+    if (!watchedCategory) return
+    // During initial programmatic setup, avoid clearing children
+    if (!didInitFromTree.current && !selectedCategoryId) {
       setSelectedCategoryId(watchedCategory)
-      // Only reset subcategory if this is NOT the initial programmatic set
-      if (!wasEmpty) {
-        setValue('subcategory', '')
-      }
-
-      // Get selected category's attributes
-      const selectedCat = categories.find((cat) => cat._id === watchedCategory)
-      
-      console.log('[EditProduct] Selected Category:', selectedCat)
-      console.log('[EditProduct] Category Attributes:', selectedCat?.attributes)
-      
-      if (selectedCat?.attributes) {
-        setCategoryAttributes(selectedCat.attributes)
-      } else {
-        setCategoryAttributes([])
-      }
+      return
     }
-  }, [watchedCategory, selectedCategoryId, setValue, categories])
+    if (watchedCategory !== selectedCategoryId) {
+      setSelectedCategoryId(watchedCategory)
+      setValue('subcategory', '')
+      setValue('subSubcategory', '')
+    }
+  }, [watchedCategory, selectedCategoryId, setValue])
 
-  // Update subcategory attributes when subcategory changes
+  // Set category attributes from detailed category fetch
   useEffect(() => {
+    const nextAttrs: any[] = selectedCategoryDetails && Array.isArray((selectedCategoryDetails as any).attributes)
+      ? ((selectedCategoryDetails as any).attributes as any[])
+      : []
+    setCategoryAttributes(nextAttrs)
+  }, [selectedCategoryDetails])
+
+  // Update subcategory attributes when subcategory changes; clear subSubcategory only after initial load
+  useEffect(() => {
+    const current = watchedSubcategory || null
+    if (prevSubcategoryRef.current !== null && prevSubcategoryRef.current !== current) {
+      setValue('subSubcategory', '')
+    }
+    prevSubcategoryRef.current = current
     if (watchedSubcategory) {
       const selectedSubcat = subcategories.find((cat) => cat._id === watchedSubcategory)
-      if (selectedSubcat?.attributes) {
-        setSubcategoryAttributes(selectedSubcat.attributes)
-      } else {
-        setSubcategoryAttributes([])
-      }
+      const attrs: any[] = selectedSubcat && Array.isArray((selectedSubcat as any).attributes)
+        ? ((selectedSubcat as any).attributes as any[])
+        : []
+      setSubcategoryAttributes(attrs)
     } else {
       setSubcategoryAttributes([])
     }
-  }, [watchedSubcategory, subcategories])
+  }, [watchedSubcategory, subcategories, setValue])
+
+  // Update sub-subcategory attributes when sub-subcategory changes
+  useEffect(() => {
+    if (watchedSubSubcategory) {
+      const selectedSubSubcat = subSubcategories.find((cat: any) => cat._id === watchedSubSubcategory)
+      const attrs: any[] = selectedSubSubcat && Array.isArray((selectedSubSubcat as any).attributes)
+        ? ((selectedSubSubcat as any).attributes as any[])
+        : []
+      setSubSubcategoryAttributes(attrs)
+    } else {
+      setSubSubcategoryAttributes([])
+    }
+  }, [watchedSubSubcategory, subSubcategories])
 
   // Handle size selection
   const handleSizeChange = (size: string, checked: boolean) => {
@@ -566,6 +599,7 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
         sku: values.sku,
         ...(values.category ? { category: values.category } : {}),
         ...(values.subcategory ? { subcategory: values.subcategory } : {}),
+        ...(values.subSubcategory ? { subSubcategory: values.subSubcategory } : {}),
         ...(values.brand ? { brand: values.brand } : {}),
         images: finalImages,
         thumbnail: finalThumb || product?.thumbnail,
@@ -884,6 +918,19 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
                 </select>
               </Col>
             </Row>
+            <Row>
+              <Col lg={6} className="mb-3">
+                <label>Sub-SubCategory</label>
+                <select {...register('subSubcategory')} className="form-control" disabled={!watchedSubcategory || subSubcategoriesLoading}>
+                  <option value="">Select Sub-SubCategory</option>
+                  {subSubcategories.map((subsub: any) => (
+                    <option key={subsub._id} value={subsub._id}>
+                      {subsub.title}
+                    </option>
+                  ))}
+                </select>
+              </Col>
+            </Row>
 
             {/* Dynamic Category Attributes */}
             {categoryAttributes && categoryAttributes.length > 0 && (
@@ -1023,11 +1070,11 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
 
             {/* Sizes and Colors Section - Only show if attributes exist */}
             {(() => {
-              // Check if category or subcategory has size/color attributes
-              const sizeAttribute = [...categoryAttributes, ...subcategoryAttributes].find(
+              // Check if any level has size/color attributes
+              const sizeAttribute = [...categoryAttributes, ...subcategoryAttributes, ...subSubcategoryAttributes].find(
                 (attr) => attr.name && (attr.name.toLowerCase() === 'size' || attr.name.toLowerCase() === 'sizes'),
               )
-              const colorAttribute = [...categoryAttributes, ...subcategoryAttributes].find(
+              const colorAttribute = [...categoryAttributes, ...subcategoryAttributes, ...subSubcategoryAttributes].find(
                 (attr) => attr.name && (attr.name.toLowerCase() === 'color' || attr.name.toLowerCase() === 'colors'),
               )
 
