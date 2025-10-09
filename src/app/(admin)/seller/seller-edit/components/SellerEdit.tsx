@@ -6,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Nouislider from 'nouislider-react'
 import { useEffect, useState } from 'react'
-import { Card, CardBody, CardHeader, CardTitle, Col, Row } from 'react-bootstrap'
+import { Card, CardBody, CardHeader, CardTitle, Col, Row, Modal } from 'react-bootstrap'
 import { useSearchParams } from 'next/navigation'
 import { useGetSellerByIdQuery, useUpdateSellerStatusMutation } from '@/store/sellerApi'
 
@@ -16,6 +16,7 @@ const SellerEdit = () => {
   const { data: vendor, isLoading } = useGetSellerByIdQuery(id, { skip: !id })
   const [status, setStatus] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const [updateStatus, { isLoading: isSaving }] = useUpdateSellerStatusMutation()
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (vendor?.kycStatus) setStatus(vendor.kycStatus)
@@ -49,6 +50,15 @@ const SellerEdit = () => {
                 </div>
               </form>
             </Col>
+
+    {/* Image Preview Modal */}
+    <Modal show={!!previewUrl} onHide={() => setPreviewUrl(null)} size="lg" centered>
+      <Modal.Body className="p-0">
+        {previewUrl && (
+          <img src={previewUrl} alt="Preview" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        )}
+      </Modal.Body>
+    </Modal>
 
             {/* email */}
             <Col lg={6}>
@@ -98,41 +108,7 @@ const SellerEdit = () => {
               </form>
             </Col>
 
-            {/* category */}
-            <Col lg={6}>
-              <form>
-                <div className="mb-3">
-                  <label htmlFor="full-name" className="form-label">
-                    Plan Purchased
-                  </label>
-                  <input type="text" id="full-name" className="form-control" value={vendor?.planName || ''} disabled />
-                </div>
-              </form>
-            </Col>
-
-            {/* Plan Purchased */}
-            <Col lg={6}>
-              <form>
-                <div className="mb-3">
-                  <label htmlFor="full-name" className="form-label">
-                    Payment Status
-                  </label>
-                  <input type="text" id="full-name" className="form-control" value={vendor?.paymentStatus || 'pending'} disabled />
-                </div>
-              </form>
-            </Col>
-
-            {/* Plan Purchased */}
-            <Col lg={6}>
-              <form>
-                <div className="mb-3">
-                  <label htmlFor="full-name" className="form-label">
-                    Payment Cost
-                  </label>
-                  <input type="text" id="full-name" className="form-control" value={vendor?.paymentAmount ? `Rs,${vendor.paymentAmount}` : ''} disabled />
-                </div>
-              </form>
-            </Col>
+            {/* removed plan/payment fields */}
 
             {/* Plan cost */}
             <Col lg={6}>
@@ -142,7 +118,7 @@ const SellerEdit = () => {
                     Aadhar Card
                   </label>
                   {vendor?.aadharUrl ? (
-                    <Image src={vendor.aadharUrl} alt="Aadhar" className="img-fluid" height={120} width={180} />
+                    <Image src={vendor.aadharUrl} alt="Aadhar" className="img-fluid" height={120} width={180} style={{cursor:'pointer'}} onClick={() => setPreviewUrl(vendor.aadharUrl)} />
                   ) : (
                     <span>-</span>
                   )}
@@ -157,7 +133,7 @@ const SellerEdit = () => {
                     Pan Card
                   </label>
                   {vendor?.panUrl ? (
-                    <Image src={vendor.panUrl} alt="PAN" className="img-fluid" height={120} width={180} />
+                    <Image src={vendor.panUrl} alt="PAN" className="img-fluid" height={120} width={180} style={{cursor:'pointer'}} onClick={() => setPreviewUrl(vendor.panUrl)} />
                   ) : (
                     <span>-</span>
                   )}

@@ -83,9 +83,6 @@ const SeelerList = () => {
                     <th style={{ textWrap: 'nowrap' }}>Phone</th>
                     <th style={{ textWrap: 'nowrap' }}>GST No.</th>
                     <th style={{ textWrap: 'nowrap' }}>Business Address</th>
-                    <th style={{ textWrap: 'nowrap' }}>Plan Purchased</th>
-                    <th style={{ textWrap: 'nowrap' }}>Paymeny Status</th>
-                    <th style={{ textWrap: 'nowrap' }}>Paymeny Amount</th>
                     <th style={{ textWrap: 'nowrap' }}>Aadhar Card</th>
                     <th style={{ textWrap: 'nowrap' }}>Pan Card</th>
                     <th style={{ textWrap: 'nowrap' }}>Status</th>
@@ -95,12 +92,12 @@ const SeelerList = () => {
                 <tbody>
                   {isLoading && (
                     <tr>
-                      <td colSpan={10} className="text-center">Loading...</td>
+                      <td colSpan={9} className="text-center">Loading...</td>
                     </tr>
                   )}
                   {!isLoading && items.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="text-center">No data found</td>
+                      <td colSpan={9} className="text-center">No data found</td>
                     </tr>
                   )}
                   {!isLoading && items.map((v: any) => (
@@ -110,13 +107,6 @@ const SeelerList = () => {
                       <td style={{ textWrap: 'nowrap' }}>{v.phone}</td>
                       <td style={{ textWrap: 'nowrap' }}>{v.gstNo || '-'}</td>
                       <td style={{ textWrap: 'nowrap' }}>{v.address}</td>
-                      <td style={{ textWrap: 'nowrap' }}>
-                        <span className={`badge bg-info`}>{v.planName || '-'}</span>
-                      </td>
-                      <td style={{ textWrap: 'nowrap' }}>
-                        <span className={`badge ${v.paymentStatus === 'done' ? 'bg-success' : v.paymentStatus === 'failed' ? 'bg-danger' : 'bg-secondary'}`}>{v.paymentStatus || 'pending'}</span>
-                      </td>
-                      <td style={{ textWrap: 'nowrap' }}>{v.paymentAmount ? `Rs.${v.paymentAmount}` : '-'}</td>
                       <td>
                         {v.aadharUrl ? (
                           <Image src={v.aadharUrl} alt="Aadhar Card" width={100} height={100} className="img-fluid" />
