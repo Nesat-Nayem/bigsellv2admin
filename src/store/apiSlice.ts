@@ -34,7 +34,7 @@ export interface LoginResponse {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:8080/v1/api',
+    baseUrl: 'https://api.bigsell.org/v1/api',
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as IRootState)?.auth?.token
