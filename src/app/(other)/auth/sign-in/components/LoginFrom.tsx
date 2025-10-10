@@ -39,6 +39,12 @@ const LoginFrom = () => {
         }
       />
 
+      <div className="d-flex justify-content-end mb-2">
+        <Link href="/auth/reset-pass" className="text-primary text-decoration-underline">
+          Forgot password?
+        </Link>
+      </div>
+
       <div className="mb-3">
         <FormCheck label="Remember me" id="sign-in" />
       </div>

@@ -22,7 +22,7 @@ const AuthDebug = () => {
       // Test 1: Direct fetch with token
       const token = auth.token || localStorage.getItem('token')
 
-      const response = await fetch('https://api.bigsell.org/productsCategory', {
+      const response = await fetch('http://localhost:8080/productsCategory', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,

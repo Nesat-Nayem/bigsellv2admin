@@ -31,10 +31,15 @@ export interface LoginResponse {
   data: UserData
 }
 
+// Forgot/Reset password via email
+export interface RequestResetEmailRequest { email: string }
+export interface BasicResponse { success: boolean; statusCode: number; message?: string }
+export interface ConfirmResetEmailRequest { email: string; otp: string; newPassword: string }
+
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://api.bigsell.org/v1/api',
+    baseUrl: 'http://localhost:8080/v1/api',
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as IRootState)?.auth?.token
@@ -56,7 +61,23 @@ export const apiSlice = createApi({
         },
       }),
     }),
+    requestResetPasswordEmail: builder.mutation<BasicResponse, RequestResetEmailRequest>({
+      query: (payload) => ({
+        url: 'auth/forgot-password-email',
+        method: 'POST',
+        body: payload,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    }),
+    confirmResetPasswordEmail: builder.mutation<BasicResponse, ConfirmResetEmailRequest>({
+      query: (payload) => ({
+        url: 'auth/reset-password-email',
+        method: 'POST',
+        body: payload,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    }),
   }),
 })
 
-export const { useLoginMutation } = apiSlice
+export const { useLoginMutation, useRequestResetPasswordEmailMutation, useConfirmResetPasswordEmailMutation } = apiSlice
