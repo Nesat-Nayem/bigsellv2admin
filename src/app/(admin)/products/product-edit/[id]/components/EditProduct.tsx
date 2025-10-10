@@ -156,6 +156,11 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
   const watchedSubcategory = watch('subcategory')
   const watchedSubSubcategory = watch('subSubcategory')
   const prevSubcategoryRef = useRef<string | null>(null)
+  const initialCategoryIdRef = useRef<string | null>(null)
+  const initialSubIdRef = useRef<string | null>(null)
+  const initialSubSubIdRef = useRef<string | null>(null)
+  const appliedInitialSubRef = useRef<boolean>(false)
+  const appliedInitialSubSubRef = useRef<boolean>(false)
 
   // Get sub-subcategories when subcategory is selected
   const { data: subSubcategories = [], isLoading: subSubcategoriesLoading } = useGetChildrenByParentQuery(
@@ -165,6 +170,28 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
 
   // Fetch full category details (with attributes) for root category
   const { data: selectedCategoryDetails } = useGetCategoryByIdQuery(watchedCategory || '', { skip: !watchedCategory })
+
+  // After subcategories load, re-apply initial subcategory once
+  useEffect(() => {
+    if (didInitFromTree.current && !appliedInitialSubRef.current && !subcategoriesLoading && Array.isArray(subcategories)) {
+      const targetSub = initialSubIdRef.current
+      if (targetSub && subcategories.some((s: any) => String(s._id) === String(targetSub))) {
+        setValue('subcategory', String(targetSub))
+      }
+      appliedInitialSubRef.current = true
+    }
+  }, [subcategoriesLoading, subcategories, setValue])
+
+  // After sub-subcategories load, re-apply initial sub-subcategory once
+  useEffect(() => {
+    if (didInitFromTree.current && !appliedInitialSubSubRef.current && !subSubcategoriesLoading && Array.isArray(subSubcategories)) {
+      const target = initialSubSubIdRef.current
+      if (target && subSubcategories.some((s: any) => String(s._id) === String(target))) {
+        setValue('subSubcategory', String(target))
+      }
+      appliedInitialSubSubRef.current = true
+    }
+  }, [subSubcategoriesLoading, subSubcategories, setValue])
 
   // Populate form when product data is loaded
   useEffect(() => {
@@ -233,10 +260,17 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
       // Set category for subcategories
       const categoryId = (product.category as any)?._id || product.category || ''
       setSelectedCategoryId(categoryId)
+      initialCategoryIdRef.current = categoryId || null
 
       // Prime previous subcategory ref to avoid clearing subSubcategory on first initialization
       const initialSubId = (product.subcategory as any)?._id || (typeof product.subcategory === 'string' ? product.subcategory : '')
       ;(prevSubcategoryRef as any).current = initialSubId || null
+      initialSubIdRef.current = initialSubId || null
+
+      const initialSubSubId = (product as any).subSubcategory
+        ? ((product as any).subSubcategory as any)._id || (typeof (product as any).subSubcategory === 'string' ? (product as any).subSubcategory : '')
+        : ''
+      initialSubSubIdRef.current = initialSubSubId || null
 
       // Initialize images list (existing)
       const initialImages: ImageItem[] = (product.images || []).map((u) => ({
@@ -897,24 +931,36 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
                   {...register('category', { required: 'Category is required' })}
                   className={`form-control ${errors.category ? 'is-invalid' : ''}`}
                   disabled={categoriesLoading}>
-                  <option value="">Select Category</option>
-                  {categories.map((category) => (
-                    <option key={category._id} value={category._id}>
-                      {category.title}
-                    </option>
-                  ))}
+                  {categoriesLoading ? (
+                    <option value="" disabled>Loading categories...</option>
+                  ) : (
+                    <>
+                      <option value="">Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.title}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
                 {errors.category && <div className="invalid-feedback">{errors.category.message}</div>}
               </Col>
               <Col lg={6} className="mb-3">
                 <label>SubCategory</label>
                 <select {...register('subcategory')} className="form-control" disabled={!selectedCategoryId || subcategoriesLoading}>
-                  <option value="">Select SubCategory</option>
-                  {subcategories.map((subcategory) => (
-                    <option key={subcategory._id} value={subcategory._id}>
-                      {subcategory.title}
-                    </option>
-                  ))}
+                  {subcategoriesLoading ? (
+                    <option value="" disabled>Loading subcategories...</option>
+                  ) : (
+                    <>
+                      <option value="">Select SubCategory</option>
+                      {subcategories.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory._id}>
+                          {subcategory.title}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
               </Col>
             </Row>
@@ -922,12 +968,18 @@ const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
               <Col lg={6} className="mb-3">
                 <label>Sub-SubCategory</label>
                 <select {...register('subSubcategory')} className="form-control" disabled={!watchedSubcategory || subSubcategoriesLoading}>
-                  <option value="">Select Sub-SubCategory</option>
-                  {subSubcategories.map((subsub: any) => (
-                    <option key={subsub._id} value={subsub._id}>
-                      {subsub.title}
-                    </option>
-                  ))}
+                  {subSubcategoriesLoading ? (
+                    <option value="" disabled>Loading sub-subcategories...</option>
+                  ) : (
+                    <>
+                      <option value="">Select Sub-SubCategory</option>
+                      {subSubcategories.map((subsub: any) => (
+                        <option key={subsub._id} value={subsub._id}>
+                          {subsub.title}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
               </Col>
             </Row>
