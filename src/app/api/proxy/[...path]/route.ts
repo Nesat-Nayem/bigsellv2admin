@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = 'http://localhost:8080/v1/api'
+const BACKEND_URL = 'https://api.bigsell.org/v1/api'
 
 export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
   return proxyRequest(request, params.path, 'GET')
