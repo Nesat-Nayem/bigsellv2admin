@@ -168,27 +168,27 @@ export const MENU_ITEMS: MenuItemType[] = [
     key: 'OTHER',
     label: 'OTHER',
     isTitle: true,
-    allowedRoles: ['admin'], // Only admin can see this section
+    allowedRoles: ['admin'], 
   },
   {
     key: 'coupons',
     label: 'Coupons',
     icon: 'solar:leaf-bold-duotone',
-    allowedRoles: ['admin'],
+    allowedRoles: ['admin', 'vendor'],
     children: [
       {
         key: 'coupons-add',
         label: 'Create Coupon',
         url: '/coupons/coupons-add',
         parentKey: 'coupons',
-        allowedRoles: ['admin'],
+        allowedRoles: ['admin', 'vendor'],
       },
       {
         key: 'coupons-list',
         label: 'Coupon List',
         url: '/coupons/coupons-list',
         parentKey: 'coupons',
-        allowedRoles: ['admin'],
+        allowedRoles: ['admin', 'vendor'],
       },
     ],
   },

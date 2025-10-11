@@ -7,6 +7,9 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, Row } from 'react-bootstrap'
 import { useForm, Controller } from 'react-hook-form'
 import * as yup from 'yup'
+import { useCreateCouponMutation } from '@/store/couponApi'
+import { useRouter } from 'next/navigation'
+import React from 'react'
 
 const couponSchema = yup.object({
   code: yup.string().required('Please enter Coupons Code'),
@@ -17,6 +20,9 @@ const couponSchema = yup.object({
 })
 
 const Coupons = () => {
+  const router = useRouter()
+  const [createCoupon, { isLoading }] = useCreateCouponMutation()
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
   const { handleSubmit, control } = useForm({
     resolver: yupResolver(couponSchema),
     defaultValues: {
@@ -24,8 +30,23 @@ const Coupons = () => {
     },
   })
 
-  const onSubmit = (data: any) => {
-    console.log('Form Data:', data)
+  const onSubmit = async (data: any) => {
+    setErrorMsg(null)
+    const payload = {
+      code: String(data.code || '').toUpperCase(),
+      discountType: 'percentage' as const,
+      discountValue: Number(data.discount || 0),
+      startDate: data.startDate,
+      endDate: data.endDate,
+      status: (data.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
+    }
+    try {
+      await createCoupon(payload).unwrap()
+      router.push('/coupons/coupons-list')
+    } catch (e) {
+      const msg = (e as any)?.data?.message || 'Failed to create coupon'
+      setErrorMsg(msg)
+    }
   }
 
   return (
@@ -143,9 +164,10 @@ const Coupons = () => {
                 </Row>
               </CardBody>
               <CardFooter className="border-top">
-                <Button type="submit" className="btn btn-primary">
-                  Create Coupon
+                <Button type="submit" className="btn btn-primary" disabled={isLoading}>
+                  {isLoading ? 'Creating...' : 'Create Coupon'}
                 </Button>
+                {errorMsg && <div className="alert alert-danger mt-2 mb-0">{errorMsg}</div>}
               </CardFooter>
             </Card>
           </Col>

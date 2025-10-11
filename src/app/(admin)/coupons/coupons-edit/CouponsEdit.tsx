@@ -6,7 +6,10 @@ import PageTitle from '@/components/PageTItle'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, Row } from 'react-bootstrap'
 import { useForm, Controller } from 'react-hook-form'
+import React, { useEffect } from 'react'
 import * as yup from 'yup'
+import { useGetCouponByIdQuery, useUpdateCouponMutation } from '@/store/couponApi'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 const couponSchema = yup.object({
   code: yup.string().required('Please enter Coupons Code'),
@@ -17,20 +20,51 @@ const couponSchema = yup.object({
 })
 
 const CouponsEdit = () => {
-  const { handleSubmit, control } = useForm({
+  const params = useSearchParams()
+  const router = useRouter()
+  const id = params?.get('id') || ''
+  const { data: coupon, isLoading } = useGetCouponByIdQuery(id, { skip: !id })
+  const [updateCoupon, { isLoading: isSaving }] = useUpdateCouponMutation()
+
+  const { handleSubmit, control, reset } = useForm({
     resolver: yupResolver(couponSchema),
     defaultValues: {
       status: 'active',
     },
   })
 
-  const onSubmit = (data: any) => {
-    console.log('Form Data:', data)
+  useEffect(() => {
+    if (!coupon) return
+    reset({
+      code: coupon.code,
+      discount: String(coupon.discountValue ?? ''),
+      status: coupon.status,
+      startDate: coupon.startDate,
+      endDate: coupon.endDate,
+    } as any)
+  }, [coupon, reset])
+
+  const onSubmit = async (data: any) => {
+    if (!id) return
+    const payload = {
+      code: String(data.code || '').toUpperCase(),
+      discountType: 'percentage' as const,
+      discountValue: Number(data.discount || 0),
+      startDate: data.startDate,
+      endDate: data.endDate,
+      status: (data.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
+    }
+    try {
+      await updateCoupon({ id, data: payload }).unwrap()
+      router.push('/coupons/coupons-list')
+    } catch (e) {
+      // optionally toast
+    }
   }
 
   return (
     <>
-      <PageTitle title="COUPONS ADD" />
+      <PageTitle title="COUPONS EDIT" />
       <form onSubmit={handleSubmit(onSubmit)}>
         <Row>
           {/* Left Column */}
@@ -143,8 +177,8 @@ const CouponsEdit = () => {
                 </Row>
               </CardBody>
               <CardFooter className="border-top">
-                <Button type="submit" className="btn btn-primary">
-                  Create Coupon
+                <Button type="submit" className="btn btn-primary" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Coupon'}
                 </Button>
               </CardFooter>
             </Card>

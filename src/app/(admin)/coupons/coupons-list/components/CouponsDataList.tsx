@@ -1,11 +1,13 @@
+"use client"
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
-import { getProductData } from '@/helpers/data'
 import Link from 'next/link'
 import React from 'react'
-import { Card, CardFooter, CardHeader, CardTitle, Col, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row } from 'react-bootstrap'
+import { Card, CardFooter, CardHeader, CardTitle, Col, Row } from 'react-bootstrap'
+import { useGetCouponsQuery, useDeleteCouponMutation } from '@/store/couponApi'
 
-const CouponsDataList = async () => {
-  const couponsData = await getProductData()
+const CouponsDataList = () => {
+  const { data: coupons = [], isLoading } = useGetCouponsQuery()
+  const [deleteCoupon] = useDeleteCouponMutation()
 
   return (
     <Row>
@@ -29,12 +31,6 @@ const CouponsDataList = async () => {
               <table className="table align-middle mb-0 table-hover table-centered table-bordered">
                 <thead className="bg-light-subtle">
                   <tr>
-                    <th style={{ width: 20 }}>
-                      <div className="form-check">
-                        <input type="checkbox" className="form-check-input" id="customCheck1" />
-                        <label className="form-check-label" htmlFor="customCheck1" />
-                      </div>
-                    </th>
                     <th>Code</th>
                     <th>Discount</th>
                     <th>Start Date</th>
@@ -44,31 +40,50 @@ const CouponsDataList = async () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <div className="form-check">
-                        <input type="checkbox" className="form-check-input" id="customCheck2" />
-                        <label className="form-check-label" htmlFor="customCheck2" />
-                      </div>
-                    </td>
-                    <td>code345</td>
-                    <td>Rs.300</td>
-                    <td>25 Aug 2025</td>
-                    <td>30 Aug 2025</td>
-                    <td>
-                      <span className="badge bg-success">Active</span>
-                    </td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <Link href={`/coupons/coupons-edit/`} className="btn btn-soft-primary btn-sm">
-                          <IconifyIcon icon="solar:pen-2-broken" className="align-middle fs-18" />
-                        </Link>
-                        <Link href="" className="btn btn-soft-danger btn-sm">
-                          <IconifyIcon icon="solar:trash-bin-minimalistic-2-broken" className="align-middle fs-18" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6}>
+                        <div className="alert alert-info m-0">Loading...</div>
+                      </td>
+                    </tr>
+                  ) : coupons.length === 0 ? (
+                    <tr>
+                      <td colSpan={6}>
+                        <div className="text-muted">No coupons found.</div>
+                      </td>
+                    </tr>
+                  ) : (
+                    coupons.map((c: any) => (
+                      <tr key={c._id}>
+                        <td>{c.code}</td>
+                        <td>
+                          {c.discountType === 'percentage'
+                            ? `${c.discountValue}%`
+                            : `Rs.${Number(c.discountValue || 0).toFixed(2)}`}
+                        </td>
+                        <td>{String(c.startDate)}</td>
+                        <td>{String(c.endDate)}</td>
+                        <td>
+                          <span className={`badge ${c.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>{c.status}</span>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <Link href={`/coupons/coupons-edit?id=${c._id}`} className="btn btn-soft-primary btn-sm">
+                              <IconifyIcon icon="solar:pen-2-broken" className="align-middle fs-18" />
+                            </Link>
+                            <button
+                              onClick={async () => {
+                                try { await deleteCoupon(c._id as string).unwrap() } catch {}
+                              }}
+                              className="btn btn-soft-danger btn-sm"
+                            >
+                              <IconifyIcon icon="solar:trash-bin-minimalistic-2-broken" className="align-middle fs-18" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

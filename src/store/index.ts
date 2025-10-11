@@ -26,6 +26,7 @@ import productCategoryApi from './productCategoryApi'
 import { subscriptionApi } from './subscriptionApi'
 import { subscriptionIncludesApi } from './subscriptionIncludesApi'
 import { sellerApi } from './sellerApi'
+import { couponApi } from './couponApi'
 
 export const store = configureStore({
   reducer: {
@@ -56,6 +57,7 @@ export const store = configureStore({
     [subscriptionApi.reducerPath]: subscriptionApi.reducer,
     [subscriptionIncludesApi.reducerPath]: subscriptionIncludesApi.reducer,
     [sellerApi.reducerPath]: sellerApi.reducer,
+    [couponApi.reducerPath]: couponApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -87,6 +89,7 @@ export const store = configureStore({
       subscriptionApi.middleware,
       subscriptionIncludesApi.middleware,
       sellerApi.middleware,
+      couponApi.middleware,
     ),
 })
 
