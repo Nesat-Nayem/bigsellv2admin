@@ -337,6 +337,38 @@ export const orderApi = createApi({
       },
       providesTags: ['Order'],
     }),
+
+    // Delhivery: Create Shipment (admin/vendor)
+    createDelhiveryShipment: builder.mutation<IOrder, { id: string; payload?: any }>({
+      query: ({ id, payload }) => ({
+        url: `/orders/${id}/delhivery/shipment`,
+        method: 'POST',
+        body: payload || {},
+      }),
+      invalidatesTags: (_r, _e, { id }) => [{ type: 'Order', id }, 'Order'],
+    }),
+
+    // Delhivery: Schedule Pickup (admin/vendor)
+    scheduleDelhiveryPickup: builder.mutation<{ dlvRes: any }, { id: string; expectedPackageCount?: number; pickup?: { date?: string; time?: string; location?: string } }>({
+      query: ({ id, ...body }) => ({
+        url: `/orders/${id}/delhivery/pickup`,
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // Delhivery: Get Label (admin/vendor)
+    getDelhiveryLabel: builder.query<{ pdfBase64: string }, { id: string }>({
+      query: ({ id }) => `/orders/${id}/delhivery/label`,
+      transformResponse: (res: any) => (res?.data || res),
+    }),
+
+    // Delhivery: Track (admin/vendor/user)
+    trackDelhivery: builder.query<any, { id: string }>({
+      query: ({ id }) => `/orders/${id}/delhivery/track`,
+      transformResponse: (res: any) => (res?.data || res),
+      providesTags: (_r, _e, { id }) => [{ type: 'Order', id }],
+    }),
   }),
 })
 
@@ -350,4 +382,10 @@ export const {
   useGetOrderSummaryQuery,
   useGetVendorOrdersQuery,
   useGetVendorOrderSummaryQuery,
+  useCreateDelhiveryShipmentMutation,
+  useScheduleDelhiveryPickupMutation,
+  useGetDelhiveryLabelQuery,
+  useTrackDelhiveryQuery,
+  useLazyGetDelhiveryLabelQuery,
+  useLazyTrackDelhiveryQuery,
 } = orderApi

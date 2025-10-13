@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Badge, Button, Card, CardBody, CardFooter, CardHeader, CardTitle, Col, Dropdown, Row, Table } from 'react-bootstrap'
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
 import PageTItle from '@/components/PageTItle'
-import { useGetOrderByIdQuery, useUpdateOrderStatusMutation, useUpdatePaymentStatusMutation } from '@/store/orderApi'
+import { useGetOrderByIdQuery, useUpdateOrderStatusMutation, useUpdatePaymentStatusMutation, useCreateDelhiveryShipmentMutation, useScheduleDelhiveryPickupMutation, useLazyGetDelhiveryLabelQuery, useLazyTrackDelhiveryQuery } from '@/store/orderApi'
 import { toast } from 'react-toastify'
 
 function formatCurrency(amount?: number) {
@@ -42,11 +42,71 @@ export default function AdminOrderDetailPage() {
   const router = useRouter()
   const id = Array.isArray(params?.id) ? params?.id[0] : params?.id
 
-  const { data: order, isLoading, isFetching, error } = useGetOrderByIdQuery(id ?? '', { skip: !id })
+  const { data: order, isLoading, isFetching, error, refetch } = useGetOrderByIdQuery(id ?? '', { skip: !id }) as any
   const [updateOrderStatus] = useUpdateOrderStatusMutation()
   const [updatePaymentStatus] = useUpdatePaymentStatusMutation()
   const [isUpdating, setIsUpdating] = useState(false)
+  const [createShipment, { isLoading: creatingShipment }] = useCreateDelhiveryShipmentMutation()
+  const [schedulePickup, { isLoading: schedulingPickup }] = useScheduleDelhiveryPickupMutation()
+  const [triggerLabel, { isFetching: fetchingLabel }] = useLazyGetDelhiveryLabelQuery()
+  const [triggerTrack, { isFetching: fetchingTrack, data: trackData }] = useLazyTrackDelhiveryQuery()
 
+  const handleCreateDelhiveryShipment = async () => {
+    if (!id) return
+    try {
+      setIsUpdating(true)
+      await createShipment({ id }).unwrap()
+      toast.success('Delhivery shipment created. Order marked as shipped.')
+      await refetch()
+    } catch (e: any) {
+      console.error(e)
+      toast.error(e?.data?.message || 'Failed to create Delhivery shipment')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleSchedulePickup = async () => {
+    if (!id) return
+    try {
+      setIsUpdating(true)
+      const expectedPackageCount = (order?.items?.length || 1)
+      await schedulePickup({ id, expectedPackageCount }).unwrap()
+      toast.success('Pickup scheduled with Delhivery')
+    } catch (e: any) {
+      console.error(e)
+      toast.error(e?.data?.message || 'Failed to schedule pickup')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDownloadLabel = async () => {
+    if (!id) return
+    try {
+      const res = await triggerLabel({ id }).unwrap()
+      const b64 = (res as any)?.pdfBase64
+      if (!b64) throw new Error('No label data')
+      const link = document.createElement('a')
+      link.href = `data:application/pdf;base64,${b64}`
+      link.download = `${order?.orderNumber || id}-label.pdf`
+      link.click()
+    } catch (e: any) {
+      console.error(e)
+      toast.error(e?.data?.message || 'Failed to download label')
+    }
+  }
+
+  const handleTrack = async () => {
+    if (!id) return
+    try {
+      await triggerTrack({ id }).unwrap()
+      toast.success('Tracking updated')
+    } catch (e: any) {
+      console.error(e)
+      toast.error(e?.data?.message || 'Failed to fetch tracking')
+    }
+  }
   const handleStatusUpdate = async (newStatus: string, note?: string) => {
     if (!id) return
     try {
@@ -431,6 +491,42 @@ export default function AdminOrderDetailPage() {
                         </Dropdown.Item>
                       </Dropdown.Menu>
                     </Dropdown>
+                  </div>
+
+                  {/* Delhivery Actions */}
+                  <hr />
+                  <div>
+                    <label className="form-label small text-muted mb-2">Shipping via Delhivery</label>
+                    <div className="d-grid gap-2">
+                      {!order?.trackingNumber ? (
+                        <>
+                          <Button size="sm" variant="primary" disabled={isUpdating || creatingShipment} onClick={handleCreateDelhiveryShipment}>
+                            {creatingShipment ? 'Creating Shipment…' : 'Create Delhivery Shipment'}
+                          </Button>
+                          <Button size="sm" variant="outline-primary" disabled={isUpdating || schedulingPickup} onClick={handleSchedulePickup}>
+                            {schedulingPickup ? 'Scheduling Pickup…' : 'Schedule Pickup'}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="small text-muted">Tracking: <strong>{order.trackingNumber}</strong></div>
+                          <div className="d-flex gap-2">
+                            <Button size="sm" variant="outline-secondary" disabled={fetchingLabel} onClick={handleDownloadLabel}>
+                              {fetchingLabel ? 'Downloading…' : 'Download Label'}
+                            </Button>
+                            <Button size="sm" variant="outline-info" disabled={fetchingTrack} onClick={handleTrack}>
+                              {fetchingTrack ? 'Fetching…' : 'Track Now'}
+                            </Button>
+                          </div>
+                          {trackData && (
+                            <div className="mt-2 small">
+                              <div className="text-muted">Last Track Update:</div>
+                              <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(trackData?.Shipment || trackData, null, 2)}</pre>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
