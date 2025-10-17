@@ -127,6 +127,15 @@ const OrdersList = () => {
   if (isLoading) return <div className="d-flex justify-content-center p-4"><div className="spinner-border" role="status"><span className="visually-hidden">Loading...</span></div></div>
   if (error) return <div className="alert alert-danger">Error loading orders</div>
   return (
+    <>
+      <style jsx global>{`
+        .status-dropdown .dropdown-toggle::after {
+          display: none !important;
+        }
+        .status-dropdown .dropdown-toggle {
+          cursor: pointer;
+        }
+      `}</style>
     <Row>
       <Col xl={12}>
         <Card>
@@ -257,50 +266,78 @@ const OrdersList = () => {
                         </td>
                         <td>{formatDate(order.orderDate || order.createdAt)}</td>
                         <td>
-                          <Dropdown>
+                          <Dropdown className="status-dropdown">
                             <Dropdown.Toggle 
                               as="button" 
-                              className={`btn btn-sm badge ${getPaymentStatusBadge(order.paymentStatus)} border-0`}
+                              className={`btn btn-sm badge ${getPaymentStatusBadge(order.paymentStatus)} border-0 d-inline-flex align-items-center gap-1`}
                               disabled={isUpdating === order._id}
+                              style={{ padding: '0.35rem 0.65rem' }}
                             >
-                              {order.paymentStatus || 'pending'}
+                              <IconifyIcon 
+                                icon={
+                                  order.paymentStatus === 'paid' ? 'solar:check-circle-bold' :
+                                  order.paymentStatus === 'failed' ? 'solar:close-circle-bold' :
+                                  'solar:clock-circle-bold'
+                                } 
+                                className="fs-14" 
+                              />
+                              <span className="text-capitalize">{order.paymentStatus || 'pending'}</span>
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => handlePaymentStatusUpdate(order._id, 'pending')}>
+                              <Dropdown.Item onClick={() => handlePaymentStatusUpdate(order._id, 'pending')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:clock-circle-bold" className="fs-16 text-warning" />
                                 Pending
                               </Dropdown.Item>
-                              <Dropdown.Item onClick={() => handlePaymentStatusUpdate(order._id, 'paid')}>
+                              <Dropdown.Item onClick={() => handlePaymentStatusUpdate(order._id, 'paid')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:check-circle-bold" className="fs-16 text-success" />
                                 Paid
                               </Dropdown.Item>
-                              <Dropdown.Item onClick={() => handlePaymentStatusUpdate(order._id, 'failed')}>
+                              <Dropdown.Item onClick={() => handlePaymentStatusUpdate(order._id, 'failed')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:close-circle-bold" className="fs-16 text-danger" />
                                 Failed
                               </Dropdown.Item>
                             </Dropdown.Menu>
                           </Dropdown>
                         </td>
                         <td>
-                          <Dropdown>
+                          <Dropdown className="status-dropdown">
                             <Dropdown.Toggle 
                               as="button" 
-                              className={`btn btn-sm badge ${getStatusBadge(order.status)} border-0`}
+                              className={`btn btn-sm badge ${getStatusBadge(order.status)} border-0 d-inline-flex align-items-center gap-1`}
                               disabled={isUpdating === order._id}
+                              style={{ padding: '0.35rem 0.65rem' }}
                             >
-                              {order.status || 'pending'}
+                              <IconifyIcon 
+                                icon={
+                                  order.status === 'delivered' ? 'solar:check-circle-bold' :
+                                  order.status === 'shipped' ? 'solar:delivery-bold' :
+                                  order.status === 'confirmed' ? 'solar:verified-check-bold' :
+                                  order.status === 'cancelled' ? 'solar:close-circle-bold' :
+                                  'solar:clock-circle-bold'
+                                } 
+                                className="fs-14" 
+                              />
+                              <span className="text-capitalize">{order.status || 'pending'}</span>
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
-                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'pending')}>
+                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'pending')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:clock-circle-bold" className="fs-16 text-warning" />
                                 Pending
                               </Dropdown.Item>
-                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'confirmed')}>
+                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'confirmed')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:verified-check-bold" className="fs-16 text-info" />
                                 Confirmed
                               </Dropdown.Item>
-                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'shipped')}>
+                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'shipped')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:delivery-bold" className="fs-16 text-primary" />
                                 Shipped
                               </Dropdown.Item>
-                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'delivered')}>
+                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'delivered')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:check-circle-bold" className="fs-16 text-success" />
                                 Delivered
                               </Dropdown.Item>
-                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'cancelled')}>
+                              <Dropdown.Item onClick={() => handleStatusUpdate(order._id, 'cancelled')} className="d-flex align-items-center gap-2">
+                                <IconifyIcon icon="solar:close-circle-bold" className="fs-16 text-danger" />
                                 Cancelled
                               </Dropdown.Item>
                             </Dropdown.Menu>
@@ -429,6 +466,7 @@ const OrdersList = () => {
         </Card>
       </Col>
     </Row>
+    </>
   )
 }
 
