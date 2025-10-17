@@ -84,3 +84,98 @@
 
 // Dashboard responsive styles
 @import "dashboard-responsive";
+
+// React Toastify Custom Styles
+@import 'react-toastify/dist/ReactToastify.css';
+
+.custom-toast {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  min-height: 64px !important;
+  padding: 0 !important;
+  
+  .Toastify__toast-body {
+    padding: 16px 20px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+  }
+  
+  .Toastify__close-button {
+    opacity: 0.8 !important;
+    
+    &:hover {
+      opacity: 1 !important;
+    }
+  }
+  
+  .Toastify__progress-bar {
+    height: 3px !important;
+  }
+}
+
+.Toastify__toast--success {
+  background: linear-gradient(135deg, #28a745, #34ce57) !important;
+  
+  .Toastify__progress-bar {
+    background: rgba(255, 255, 255, 0.8) !important;
+  }
+}
+
+.Toastify__toast--error {
+  background: linear-gradient(135deg, #dc3545, #e74c3c) !important;
+  
+  .Toastify__progress-bar {
+    background: rgba(255, 255, 255, 0.8) !important;
+  }
+}
+
+.Toastify__toast--info {
+  background: linear-gradient(135deg, #17a2b8, #3498db) !important;
+  
+  .Toastify__progress-bar {
+    background: rgba(255, 255, 255, 0.8) !important;
+  }
+}
+
+.Toastify__toast--warning {
+  background: linear-gradient(135deg, #ffc107, #f39c12) !important;
+  color: #333 !important;
+  
+  .Toastify__progress-bar {
+    background: rgba(51, 51, 51, 0.3) !important;
+  }
+}
+
+// Custom toast animations
+@keyframes toastSlideIn {
+  from {
+    transform: translate3d(110%, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(110%, 0, 0);
+    opacity: 0;
+  }
+}
+
+.Toastify__slide-enter--top-right {
+  animation: toastSlideIn 0.4s ease-out;
+}
+
+.Toastify__slide-exit--top-right {
+  animation: toastSlideOut 0.3s ease-in;
+}

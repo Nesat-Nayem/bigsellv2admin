@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardBody, CardHeader, CardTitle, Col, Row, Modal } from 'react-bootstrap'
 import { useSearchParams } from 'next/navigation'
 import { useGetSellerByIdQuery, useUpdateSellerStatusMutation } from '@/store/sellerApi'
+import { toast } from 'react-toastify'
 
 const SellerEdit = () => {
   const searchParams = useSearchParams()
@@ -23,12 +24,106 @@ const SellerEdit = () => {
   }, [vendor])
 
   const handleSave = async () => {
-    if (!id) return
+    if (!id) {
+      toast.error('❌ Seller ID is missing!', {
+        position: 'top-right',
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+      return
+    }
+    
+    // Show loading toast
+    const loadingToast = toast.loading('🔄 Updating seller status...', {
+      position: 'top-right',
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: false,
+      draggable: false,
+    })
+    
     try {
       await updateStatus({ id, kycStatus: status }).unwrap()
-      alert('Status updated successfully')
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast)
+      
+      // Success toast with dynamic message based on status
+      const statusMessages = {
+        approved: '✅ Seller approved successfully! They can now start selling.',
+        rejected: '❌ Seller application rejected. Email notification sent.',
+        pending: '⏳ Seller status updated to pending review.'
+      }
+      
+      toast.success(statusMessages[status], {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          fontSize: '14px',
+          fontWeight: '500'
+        }
+      })
+      
+      // Show additional info for approved sellers
+      if (status === 'approved') {
+        setTimeout(() => {
+          toast.info('📧 Welcome email with dashboard access sent to the seller', {
+            position: 'top-right',
+            autoClose: 5000,
+          })
+        }, 1500)
+        
+        setTimeout(() => {
+          toast.success('🎯 Seller can now access their dashboard at: bigselladmin.atpuae.com', {
+            position: 'top-right',
+            autoClose: 7000,
+          })
+        }, 3000)
+      }
+      
     } catch (e: any) {
-      alert(e?.data?.message || 'Failed to update status')
+      // Dismiss loading toast
+      toast.dismiss(loadingToast)
+      
+      const errorMessage = e?.data?.message || e?.message || 'Failed to update seller status'
+      
+      toast.error(`❌ ${errorMessage}`, {
+        position: 'top-right',
+        autoClose: 6000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          fontSize: '14px',
+          fontWeight: '500'
+        }
+      })
+      
+      // Additional info toast for common errors
+      if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
+        setTimeout(() => {
+          toast.info('💡 Please check your internet connection and try again', {
+            position: 'top-right',
+            autoClose: 4000
+          })
+        }, 1000)
+      } else if (errorMessage.includes('unauthorized') || errorMessage.includes('permission')) {
+        setTimeout(() => {
+          toast.warning('🔐 You may need to refresh your session', {
+            position: 'top-right',
+            autoClose: 5000
+          })
+        }, 1000)
+      }
     }
   }
   return (
