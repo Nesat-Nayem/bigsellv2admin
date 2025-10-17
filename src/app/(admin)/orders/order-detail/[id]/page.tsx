@@ -162,6 +162,14 @@ export default function AdminOrderDetailPage() {
 
   return (
     <>
+      <style jsx global>{`
+        .status-dropdown .dropdown-toggle::after {
+          display: none !important;
+        }
+        .status-dropdown .dropdown-toggle {
+          cursor: pointer;
+        }
+      `}</style>
       <PageTItle title="ORDER DETAILS" />
 
       <div className="d-flex justify-content-between align-items-start mb-3">
@@ -188,13 +196,25 @@ export default function AdminOrderDetailPage() {
             {order?.status && (
               <div className="d-flex align-items-center gap-2">
                 <span className="text-muted small">Order Status:</span>
-                <Dropdown>
+                <Dropdown className="status-dropdown">
                   <Dropdown.Toggle 
                     as="button" 
-                    className={`btn btn-sm badge ${getStatusBadge(order.status)} border-0`}
+                    className={`btn btn-sm badge ${getStatusBadge(order.status)} border-0 d-inline-flex align-items-center gap-1`}
                     disabled={isUpdating}
+                    style={{ padding: '0.35rem 0.65rem' }}
                   >
-                    {order.status} <IconifyIcon icon="solar:alt-arrow-down-linear" className="ms-1" />
+                    <IconifyIcon 
+                      icon={
+                        order.status === 'delivered' ? 'solar:check-circle-bold' :
+                        order.status === 'shipped' ? 'solar:delivery-bold' :
+                        order.status === 'confirmed' ? 'solar:verified-check-bold' :
+                        order.status === 'cancelled' ? 'solar:close-circle-bold' :
+                        order.status === 'returned' ? 'solar:restart-bold' :
+                        'solar:clock-circle-bold'
+                      } 
+                      className="fs-14" 
+                    />
+                    <span className="text-capitalize">{order.status}</span>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     <Dropdown.Item onClick={() => handleStatusUpdate('pending')}>
@@ -230,13 +250,22 @@ export default function AdminOrderDetailPage() {
             {order?.paymentStatus && (
               <div className="d-flex align-items-center gap-2">
                 <span className="text-muted small">Payment:</span>
-                <Dropdown>
+                <Dropdown className="status-dropdown">
                   <Dropdown.Toggle 
                     as="button" 
-                    className={`btn btn-sm badge ${getPaymentStatusBadge(order.paymentStatus)} border-0`}
+                    className={`btn btn-sm badge ${getPaymentStatusBadge(order.paymentStatus)} border-0 d-inline-flex align-items-center gap-1`}
                     disabled={isUpdating}
+                    style={{ padding: '0.35rem 0.65rem' }}
                   >
-                    {order.paymentStatus} <IconifyIcon icon="solar:alt-arrow-down-linear" className="ms-1" />
+                    <IconifyIcon 
+                      icon={
+                        order.paymentStatus === 'paid' ? 'solar:check-circle-bold' :
+                        order.paymentStatus === 'failed' ? 'solar:close-circle-bold' :
+                        'solar:clock-circle-bold'
+                      } 
+                      className="fs-14" 
+                    />
+                    <span className="text-capitalize">{order.paymentStatus}</span>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     <Dropdown.Item onClick={() => handlePaymentStatusUpdate('pending')}>
@@ -255,6 +284,7 @@ export default function AdminOrderDetailPage() {
                 </Dropdown>
               </div>
             )}
+            
           </div>
         </div>
         <div className="d-flex gap-2">
