@@ -114,8 +114,8 @@ export const MENU_ITEMS: MenuItemType[] = [
   //   url: '/settings',
   // },
   {
-    key: 'users',
-    label: 'USERS',
+    key: 'vendors',
+    label: 'VENDORS',
     isTitle: true,
     allowedRoles: ['admin'], // Only admin can see users section
   },
@@ -142,28 +142,28 @@ export const MENU_ITEMS: MenuItemType[] = [
     ],
   },
 
-  {
-    key: 'subscription',
-    label: 'Subscription Plan',
-    icon: 'solar:dollar-bold-duotone',
-    allowedRoles: ['admin'], // Only admin can see subscription plans
-    children: [
-      {
-        key: 'subscription-add',
-        label: 'Create Plan',
-        url: '/subscription/subscription-add',
-        parentKey: 'subscription',
-        allowedRoles: ['admin'],
-      },
-      {
-        key: 'subscription-list',
-        label: 'Subscription List',
-        url: '/subscription/subscription-list',
-        parentKey: 'subscription',
-        allowedRoles: ['admin'],
-      },
-    ],
-  },
+  // {
+  //   key: 'subscription',
+  //   label: 'Subscription Plan',
+  //   icon: 'solar:dollar-bold-duotone',
+  //   allowedRoles: ['admin'], 
+  //   children: [
+  //     {
+  //       key: 'subscription-add',
+  //       label: 'Create Plan',
+  //       url: '/subscription/subscription-add',
+  //       parentKey: 'subscription',
+  //       allowedRoles: ['admin'],
+  //     },
+  //     {
+  //       key: 'subscription-list',
+  //       label: 'Subscription List',
+  //       url: '/subscription/subscription-list',
+  //       parentKey: 'subscription',
+  //       allowedRoles: ['admin'],
+  //     },
+  //   ],
+  // },
   {
     key: 'OTHER',
     label: 'OTHER',
