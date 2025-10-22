@@ -356,18 +356,32 @@ export const MENU_ITEMS: MenuItemType[] = [
     ],
   },
 
-  // {
-  //   key: 'components',
-  //   label: 'Settings',
-  //   isTitle: true,
-  //   allowedRoles: ['admin'], // Only admin can see settings section
-  // },
-
-  //   {
-  //     key: ' settings',
-  //     label: ' Settings',
-  //     icon: 'solar:settings-bold-duotone',
-  //     url: '/settings',
-  //     allowedRoles: ['admin', 'vendor'],
-  //   },
+  {
+    key: 'account-settings',
+    label: 'ACCOUNT SETTINGS',
+    isTitle: true,
+    allowedRoles: ['admin', 'vendor'], // Both admin and vendor can see account settings
+  },
+  {
+    key: 'profile',
+    label: 'Profile Settings',
+    icon: 'solar:user-bold-duotone',
+    allowedRoles: ['admin', 'vendor'],
+    children: [
+      {
+        key: 'profile-update',
+        label: 'Update Profile',
+        url: '/profile/update',
+        parentKey: 'profile',
+        allowedRoles: ['admin', 'vendor'],
+      },
+      {
+        key: 'change-password',
+        label: 'Change Password',
+        url: '/profile/change-password',
+        parentKey: 'profile',
+        allowedRoles: ['admin', 'vendor'],
+      },
+    ],
+  },
 ]
