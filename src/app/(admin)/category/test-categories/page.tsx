@@ -80,7 +80,7 @@ const TestCategories = () => {
         <CardBody>
           <Button 
             onClick={() => {
-              fetch('http://localhost:8080/v1/api/productsCategory')
+              fetch('https://api.atpuae.com/v1/api/productsCategory')
                 .then(res => res.json())
                 .then(data => {
                   console.log('Manual API Response:', data)
