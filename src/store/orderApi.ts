@@ -138,7 +138,7 @@ const buildQuery = (params: Record<string, any>) => {
 export const orderApi = createApi({
   reducerPath: 'orderApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://api.atpuae.com/v1/api',
+    baseUrl: 'https://api.atpuae.com/v1/api',
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as RootState

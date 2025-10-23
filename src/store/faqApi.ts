@@ -23,7 +23,7 @@ export const faqApi = createApi({
   reducerPath: 'faqApi',
   baseQuery: fetchBaseQuery({
     credentials: 'include',
-    baseUrl: 'http://api.atpuae.com/v1/api',
+    baseUrl: 'https://api.atpuae.com/v1/api',
     prepareHeaders: (headers, { getState }) => {
       // Get token from state
       const token = (getState() as IRootState).auth.token

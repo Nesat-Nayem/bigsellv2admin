@@ -23,7 +23,7 @@ export const headerBannerApi = createApi({
   reducerPath: 'headerBannerApi',
   baseQuery: fetchBaseQuery({
     credentials: 'include',
-    baseUrl: 'http://api.atpuae.com/v1/api',
+    baseUrl: 'https://api.atpuae.com/v1/api',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as IRootState).auth?.token
       if (token) {
