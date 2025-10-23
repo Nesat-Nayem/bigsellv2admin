@@ -71,7 +71,20 @@ export default function AdminOrderDetailPage() {
     try {
       setIsUpdating(true)
       const expectedPackageCount = (order?.items?.length || 1)
-      await schedulePickup({ id, expectedPackageCount }).unwrap()
+      const now = new Date()
+      const d = new Date(now)
+      let slot = '11:00-15:00'
+      const h = now.getHours()
+      if (h < 11) {
+        slot = '11:00-15:00'
+      } else if (h < 15) {
+        slot = '15:00-19:00'
+      } else {
+        d.setDate(d.getDate() + 1)
+        slot = '11:00-15:00'
+      }
+      const pickupDate = d.toISOString().slice(0, 10)
+      await schedulePickup({ id, expectedPackageCount, pickup: { date: pickupDate, time: slot } }).unwrap()
       toast.success('Pickup scheduled with Delhivery')
     } catch (e: any) {
       console.error(e)
