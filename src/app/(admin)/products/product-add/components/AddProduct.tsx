@@ -1034,6 +1034,13 @@ const AddProduct = () => {
               </Col>
             </Row>
 
+            <Row>
+              <Col lg={6} className="mb-3">
+                <label>Brand</label>
+                <input {...register('brand')} className="form-control" placeholder="Enter brand" />
+              </Col>
+            </Row>
+
             {/* Dynamic Category Attributes */}
             {categoryAttributes && categoryAttributes.length > 0 && (
               <Row>

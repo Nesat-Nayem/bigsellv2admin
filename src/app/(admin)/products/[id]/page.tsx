@@ -131,9 +131,9 @@ const ProductDetails = () => {
             <ListGroup.Item>
               <strong>Stock:</strong> {product.stock ?? 'N/A'}
             </ListGroup.Item>
-            {/* <ListGroup.Item>
+            <ListGroup.Item>
               <strong>Brand:</strong> {renderTitle(product.brand as any)}
-            </ListGroup.Item> */}
+            </ListGroup.Item>
             <ListGroup.Item>
               <strong>Weight:</strong> {product.weight ? Number(product.weight).toFixed(2) : '0.00'} kg
             </ListGroup.Item>
@@ -237,10 +237,10 @@ const ProductDetails = () => {
                 <h5 className="text-dark fw-medium">Sub-Subcategory</h5>
                 <p className="text-muted">{renderTitle((product as any).subSubcategory as any)}</p>
               </Col>
-              {/* <Col md={6}>
+              <Col md={6}>
                 <h5 className="text-dark fw-medium">Brand</h5>
                 <p className="text-muted">{renderTitle(product.brand as any)}</p>
-              </Col> */}
+              </Col>
             </Row>
 
             {(() => {
