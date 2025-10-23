@@ -104,9 +104,22 @@ export default function AdminOrderDetailPage() {
       link.href = `data:application/pdf;base64,${b64}`
       link.download = `${order?.orderNumber || id}-label.pdf`
       link.click()
+      toast.success('Label downloaded successfully!')
     } catch (e: any) {
       console.error(e)
-      toast.error(e?.data?.message || 'Failed to download label')
+      const msg = e?.data?.message || 'Failed to download label'
+      toast.error(
+        <div>
+          <div>{msg}</div>
+          <div className="mt-2 small">
+            <strong>Alternative:</strong> Download from{' '}
+            <a href="https://one.delhivery.com" target="_blank" rel="noopener noreferrer" className="text-white text-decoration-underline">
+              Delhivery Dashboard
+            </a>
+          </div>
+        </div>,
+        { autoClose: 8000 }
+      )
     }
   }
 
@@ -553,19 +566,31 @@ export default function AdminOrderDetailPage() {
                       ) : (
                         <>
                           <div className="small text-muted">Tracking: <strong>{order.trackingNumber}</strong></div>
-                          <div className="d-flex gap-2">
-                            <Button size="sm" variant="outline-secondary" disabled={fetchingLabel} onClick={handleDownloadLabel}>
-                              {fetchingLabel ? 'Downloading…' : 'Download Label'}
-                            </Button>
-                            <Button size="sm" variant="outline-info" disabled={fetchingTrack} onClick={handleTrack}>
-                              {fetchingTrack ? 'Fetching…' : 'Track Now'}
+                          <div className="d-grid gap-2">
+                            <div className="d-flex gap-2">
+                              <Button size="sm" variant="outline-secondary" disabled={fetchingLabel} onClick={handleDownloadLabel} className="flex-fill">
+                                <IconifyIcon icon="solar:download-broken" className="me-1" />
+                                {fetchingLabel ? 'Downloading…' : 'Download Label'}
+                              </Button>
+                              <Button size="sm" variant="outline-info" disabled={fetchingTrack} onClick={handleTrack} className="flex-fill">
+                                <IconifyIcon icon="solar:radar-2-broken" className="me-1" />
+                                {fetchingTrack ? 'Fetching…' : 'Track Now'}
+                              </Button>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              variant="outline-primary" 
+                              as="a" 
+                              href="https://one.delhivery.com/orders" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <IconifyIcon icon="solar:external-link-broken" className="me-1" />
+                              View in Delhivery Dashboard
                             </Button>
                           </div>
                           {trackData && (
-                            <div className="mt-2 small">
-                              <div className="text-muted">Last Track Update:</div>
-                              <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(trackData?.Shipment || trackData, null, 2)}</pre>
-                            </div>
+                            <TrackingDisplay trackingData={trackData} />
                           )}
                         </>
                       )}
@@ -670,6 +695,148 @@ export default function AdminOrderDetailPage() {
         </Row>
       )}
     </>
+  )
+}
+
+function TrackingDisplay({ trackingData }: { trackingData: any }) {
+  const shipment = trackingData?.ShipmentData?.[0]?.Shipment || trackingData?.Shipment || {}
+  const status = shipment.Status || {}
+  const scans = shipment.Scans || []
+  const consignee = shipment.Consignee || {}
+
+  const getStatusVariant = (statusCode: string) => {
+    if (!statusCode) return 'secondary'
+    if (statusCode.includes('DLV') || statusCode.includes('OK')) return 'success'
+    if (statusCode.includes('RTO') || statusCode.includes('LOST')) return 'danger'
+    if (statusCode.includes('OFD') || statusCode.includes('UD')) return 'primary'
+    if (statusCode.includes('PP')) return 'info'
+    return 'warning'
+  }
+
+  return (
+    <Card className="mt-3 border">
+      <CardHeader className="bg-light-subtle">
+        <div className="d-flex align-items-center justify-content-between">
+          <div>
+            <h6 className="mb-0">Shipment Tracking</h6>
+            <small className="text-muted">AWB: {shipment.AWB}</small>
+          </div>
+          <Badge bg={getStatusVariant(status.StatusCode)} className="text-uppercase">
+            {status.Status || 'Unknown'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardBody>
+        {/* Current Status */}
+        <div className="mb-3 p-3 bg-light rounded">
+          <div className="d-flex align-items-start gap-3">
+            <div className="mt-1">
+              <IconifyIcon icon="solar:box-bold-duotone" className={`fs-24 text-${getStatusVariant(status.StatusCode)}`} />
+            </div>
+            <div className="flex-grow-1">
+              <div className="fw-semibold text-dark">{status.Status}</div>
+              <div className="text-muted small">{status.Instructions || 'No additional information'}</div>
+              <div className="mt-1 d-flex gap-3 flex-wrap small">
+                <span>
+                  <IconifyIcon icon="solar:map-point-broken" className="me-1" />
+                  {status.StatusLocation || 'N/A'}
+                </span>
+                {status.StatusDateTime && (
+                  <span>
+                    <IconifyIcon icon="solar:calendar-broken" className="me-1" />
+                    {new Date(status.StatusDateTime).toLocaleString()}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Shipment Details */}
+        <Row className="g-3 mb-3">
+          <Col md={6}>
+            <div className="small text-muted">Order Type</div>
+            <div className="fw-medium">{shipment.OrderType || 'N/A'}</div>
+          </Col>
+          <Col md={6}>
+            <div className="small text-muted">Reference Number</div>
+            <div className="fw-medium">{shipment.ReferenceNo || 'N/A'}</div>
+          </Col>
+          <Col md={6}>
+            <div className="small text-muted">Destination</div>
+            <div className="fw-medium">{shipment.Destination || 'N/A'}</div>
+          </Col>
+          <Col md={6}>
+            <div className="small text-muted">Quantity</div>
+            <div className="fw-medium">{shipment.Quantity || 'N/A'}</div>
+          </Col>
+          {shipment.CODAmount > 0 && (
+            <Col md={6}>
+              <div className="small text-muted">COD Amount</div>
+              <div className="fw-medium">₹ {shipment.CODAmount?.toLocaleString()}</div>
+            </Col>
+          )}
+          {shipment.InvoiceAmount > 0 && (
+            <Col md={6}>
+              <div className="small text-muted">Invoice Amount</div>
+              <div className="fw-medium">₹ {shipment.InvoiceAmount?.toLocaleString()}</div>
+            </Col>
+          )}
+        </Row>
+
+        {/* Consignee Details */}
+        {consignee.Name && (
+          <div className="mb-3">
+            <h6 className="text-muted mb-2">Consignee</h6>
+            <div className="p-2 bg-light rounded small">
+              <div className="fw-medium">{consignee.Name}</div>
+              <div>{consignee.City}, {consignee.State} - {consignee.PinCode}</div>
+              <div>{consignee.Country}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Tracking Timeline */}
+        {scans.length > 0 && (
+          <div>
+            <h6 className="text-muted mb-3">Shipment Journey</h6>
+            <div className="position-relative" style={{ paddingLeft: '2rem' }}>
+              {/* Timeline line */}
+              <div className="position-absolute" style={{ left: '11px', top: '8px', bottom: '8px', width: '2px', background: '#dee2e6' }}></div>
+              
+              {scans.map((scan: any, idx: number) => {
+                const detail = scan.ScanDetail || {}
+                return (
+                  <div key={idx} className="position-relative mb-3 pb-3">
+                    {/* Timeline dot */}
+                    <div className="position-absolute bg-white" style={{ left: '-1.55rem', top: '0' }}>
+                      <div className={`rounded-circle bg-${getStatusVariant(detail.StatusCode)}`} style={{ width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <IconifyIcon icon="solar:check-circle-bold" className="text-white" style={{ fontSize: '14px' }} />
+                      </div>
+                    </div>
+                    
+                    <div className="ps-2">
+                      <div className="fw-medium text-dark">{detail.Scan}</div>
+                      <div className="text-muted small">{detail.Instructions}</div>
+                      <div className="mt-1 small">
+                        <span className="text-muted">
+                          <IconifyIcon icon="solar:map-point-broken" className="me-1" />
+                          {detail.ScannedLocation}
+                        </span>
+                        <span className="text-muted ms-3">
+                          <IconifyIcon icon="solar:clock-circle-broken" className="me-1" />
+                          {new Date(detail.ScanDateTime).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </CardBody>
+    </Card>
   )
 }
 
