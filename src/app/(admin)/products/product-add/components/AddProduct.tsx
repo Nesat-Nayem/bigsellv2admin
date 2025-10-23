@@ -82,7 +82,7 @@ const AddProduct = () => {
   const [thumbXhr, setThumbXhr] = useState<XMLHttpRequest | null>(null)
   const [thumbUrlState, setThumbUrlState] = useState<string | null>(null)
 
-  const API_BASE = 'http://localhost:8080/v1/api'
+  const API_BASE = 'http://api.atpuae.com/v1/api'
   const token = useSelector((s: IRootState) => (s as any)?.auth?.token)
   const role = useSelector((s: IRootState) => (s as any)?.auth?.user?.role)
 

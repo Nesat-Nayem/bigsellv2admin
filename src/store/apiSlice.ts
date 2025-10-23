@@ -39,7 +39,7 @@ export interface ConfirmResetEmailRequest { email: string; otp: string; newPassw
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:8080/v1/api',
+    baseUrl: 'http://api.atpuae.com/v1/api',
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as IRootState)?.auth?.token
