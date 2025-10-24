@@ -568,10 +568,10 @@ export default function AdminOrderDetailPage() {
                           <div className="small text-muted">Tracking: <strong>{order.trackingNumber}</strong></div>
                           <div className="d-grid gap-2">
                             <div className="d-flex gap-2">
-                              <Button size="sm" variant="outline-secondary" disabled={fetchingLabel} onClick={handleDownloadLabel} className="flex-fill">
+                              {/* <Button size="sm" variant="outline-secondary" disabled={fetchingLabel} onClick={handleDownloadLabel} className="flex-fill">
                                 <IconifyIcon icon="solar:download-broken" className="me-1" />
                                 {fetchingLabel ? 'Downloading…' : 'Download Label'}
-                              </Button>
+                              </Button> */}
                               <Button size="sm" variant="outline-info" disabled={fetchingTrack} onClick={handleTrack} className="flex-fill">
                                 <IconifyIcon icon="solar:radar-2-broken" className="me-1" />
                                 {fetchingTrack ? 'Fetching…' : 'Track Now'}
@@ -581,7 +581,7 @@ export default function AdminOrderDetailPage() {
                               size="sm" 
                               variant="outline-primary" 
                               as="a" 
-                              href="https://one.delhivery.com/orders" 
+                              href="https://one.delhivery.com/orders/forward/ready-to-ship" 
                               target="_blank" 
                               rel="noopener noreferrer"
                             >
