@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { RootState as IRootState } from '@/store'
 
-const baseUrl = 'http://localhost:8080/v1/api'
+const baseUrl = 'https://api.atpuae.com/v1/api'
 
 /**
  * Types

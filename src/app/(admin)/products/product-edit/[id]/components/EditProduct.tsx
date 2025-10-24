@@ -61,7 +61,7 @@ interface EditProductProps {
 
 const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
   const router = useRouter()
-  const API_BASE = 'http://localhost:8080/v1/api'
+  const API_BASE = 'https://api.atpuae.com/v1/api'
   const token = useSelector((s: IRootState) => (s as any)?.auth?.token)
   const role = useSelector((s: IRootState) => (s as any)?.auth?.user?.role)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
