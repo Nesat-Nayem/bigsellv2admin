@@ -107,12 +107,12 @@ export const MENU_ITEMS: MenuItemType[] = [
     ],
   },
 
-  // {
-  //   key: 'settings',
-  //   label: 'Settings',
-  //   icon: 'solar:settings-bold-duotone',
-  //   url: '/settings',
-  // },
+  {
+    key: 'settings',
+    label: 'Settings',
+    icon: 'solar:settings-bold-duotone',
+    url: '/settings',
+  },
   {
     key: 'vendors',
     label: 'VENDORS',
@@ -360,7 +360,7 @@ export const MENU_ITEMS: MenuItemType[] = [
     key: 'account-settings',
     label: 'ACCOUNT SETTINGS',
     isTitle: true,
-    allowedRoles: ['admin', 'vendor'], // Both admin and vendor can see account settings
+    allowedRoles: ['admin', 'vendor'], 
   },
   {
     key: 'profile',

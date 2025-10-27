@@ -99,6 +99,7 @@ const GeneralSettings = () => {
             <CardBody>
               <form onSubmit={handleSave}>
                 <Row>
+                  
                   <Col lg={4}>
                     <div className="mb-3">
                       <label className="form-label">Username</label>
