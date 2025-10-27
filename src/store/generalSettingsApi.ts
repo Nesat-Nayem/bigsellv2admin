@@ -16,6 +16,7 @@ export interface IGeneralSettings {
   youtube: string
   favicon: string | null // URL from API
   logo: string | null // URL from API
+  freeShippingThreshold?: number
   createdAt: string
   updatedAt: string
 }

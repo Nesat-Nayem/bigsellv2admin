@@ -18,6 +18,7 @@ const GeneralSettings = () => {
     headerTab: '',
     iframe: '',
     address: '',
+    freeShippingThreshold: '',
     favicon: null as File | null,
     logo: null as File | null,
   })
@@ -42,6 +43,7 @@ const GeneralSettings = () => {
         headerTab: generalSettings.headerTab || '',
         iframe: generalSettings.iframe || '',
         address: generalSettings.address || '',
+        freeShippingThreshold: (generalSettings as any).freeShippingThreshold?.toString() || '',
         favicon: null,
         logo: null,
       })
@@ -69,7 +71,10 @@ const GeneralSettings = () => {
     try {
       const data = new FormData()
       Object.entries(formData).forEach(([key, value]) => {
-        if (value && typeof value === 'string') data.append(key, value)
+        if (key === 'favicon' || key === 'logo') return
+        if (value !== null && value !== undefined && value !== '') {
+          data.append(key, String(value))
+        }
       })
       if (formData.favicon) data.append('favicon', formData.favicon)
       if (formData.logo) data.append('logo', formData.logo)
@@ -93,29 +98,101 @@ const GeneralSettings = () => {
             <CardHeader>
               <CardTitle as={'h4'} className="d-flex align-items-center gap-1">
                 <IconifyIcon icon="solar:settings-bold-duotone" className="text-primary fs-20" />
-                Password Settings
+                General Settings
               </CardTitle>
             </CardHeader>
             <CardBody>
               <form onSubmit={handleSave}>
                 <Row>
-                  
                   <Col lg={4}>
                     <div className="mb-3">
-                      <label className="form-label">Username</label>
-                      <input type="email" name="email" className="form-control" />
+                      <label className="form-label">Phone Number</label>
+                      <input type="text" name="number" className="form-control" value={formData.number} onChange={handleChange} />
                     </div>
                   </Col>
                   <Col lg={4}>
                     <div className="mb-3">
-                      <label className="form-label">New Password</label>
-                      <input type="password" name="password" className="form-control" />
+                      <label className="form-label">Email</label>
+                      <input type="email" name="email" className="form-control" value={formData.email} onChange={handleChange} />
                     </div>
                   </Col>
                   <Col lg={4}>
                     <div className="mb-3">
-                      <label className="form-label">Confirm Password</label>
-                      <input type="password" name="password" className="form-control" />
+                      <label className="form-label">Header Tab</label>
+                      <input type="text" name="headerTab" className="form-control" value={formData.headerTab} onChange={handleChange} />
+                    </div>
+                  </Col>
+
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">Address</label>
+                      <input type="text" name="address" className="form-control" value={formData.address} onChange={handleChange} />
+                    </div>
+                  </Col>
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">Map Iframe</label>
+                      <input type="text" name="iframe" className="form-control" value={formData.iframe} onChange={handleChange} />
+                    </div>
+                  </Col>
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">Free Shipping Threshold</label>
+                      <input type="number" name="freeShippingThreshold" className="form-control" value={formData.freeShippingThreshold} onChange={handleChange} />
+                    </div>
+                  </Col>
+
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">Facebook</label>
+                      <input type="text" name="facebook" className="form-control" value={formData.facebook} onChange={handleChange} />
+                    </div>
+                  </Col>
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">Instagram</label>
+                      <input type="text" name="instagram" className="form-control" value={formData.instagram} onChange={handleChange} />
+                    </div>
+                  </Col>
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">LinkedIn</label>
+                      <input type="text" name="linkedIn" className="form-control" value={formData.linkedIn} onChange={handleChange} />
+                    </div>
+                  </Col>
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">Twitter</label>
+                      <input type="text" name="twitter" className="form-control" value={formData.twitter} onChange={handleChange} />
+                    </div>
+                  </Col>
+                  <Col lg={4}>
+                    <div className="mb-3">
+                      <label className="form-label">YouTube</label>
+                      <input type="text" name="youtube" className="form-control" value={formData.youtube} onChange={handleChange} />
+                    </div>
+                  </Col>
+
+                  <Col lg={6}>
+                    <div className="mb-3">
+                      <label className="form-label">Favicon</label>
+                      <input type="file" name="favicon" accept="image/*" className="form-control" onChange={handleChange} />
+                      {generalSettings?.favicon && (
+                        <div className="mt-2">
+                          <Image src={generalSettings.favicon} alt="Favicon" width={32} height={32} />
+                        </div>
+                      )}
+                    </div>
+                  </Col>
+                  <Col lg={6}>
+                    <div className="mb-3">
+                      <label className="form-label">Logo</label>
+                      <input type="file" name="logo" accept="image/*" className="form-control" onChange={handleChange} />
+                      {generalSettings?.logo && (
+                        <div className="mt-2">
+                          <Image src={generalSettings.logo} alt="Logo" width={160} height={60} />
+                        </div>
+                      )}
                     </div>
                   </Col>
 
