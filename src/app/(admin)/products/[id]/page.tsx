@@ -212,14 +212,11 @@ const ProductDetails = () => {
                 <IconifyIcon icon="bx:check" className="text-success" /> {product.stock} In Stock
               </li>
               <li>
-                <IconifyIcon icon="bx:check" className="text-success" />{' '}
-                {product.shippingInfo?.freeShipping
-                  ? 'Free Delivery Available'
-                  : `Shipping Cost: ${currency}${product.shippingInfo?.shippingCost ? Number(product.shippingInfo.shippingCost).toFixed(2) : '0.00'}`}
+                <IconifyIcon icon="bx:check" className="text-success" /> Shipping via Delhivery (dynamic at checkout)
               </li>
-              {product.shippingInfo?.estimatedDelivery && (
+              {product.shippingInfo?.weight && (
                 <li>
-                  <IconifyIcon icon="bx:check" className="text-success" /> Estimated Delivery: <span className="text-dark fw-medium">{product.shippingInfo.estimatedDelivery}</span>
+                  <IconifyIcon icon="bx:check" className="text-success" /> Shipping Weight: <span className="text-dark fw-medium">{Number(product.shippingInfo.weight).toFixed(2)} kg</span>
                 </li>
               )}
             </ul>

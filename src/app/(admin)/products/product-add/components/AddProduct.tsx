@@ -1448,7 +1448,7 @@ const AddProduct = () => {
                 <input {...register('minStock')} type="number" placeholder="Min Stock" className="form-control" />
               </Col>
               <Col className="mb-3">
-                <label>Weight (grams)</label>
+                <label>Weight </label>
                 <input {...register('weight')} type="number" placeholder="Weight" className="form-control" />
               </Col>
             </Row>
@@ -1480,24 +1480,6 @@ const AddProduct = () => {
               <Col lg={3} className="mb-3">
                 <label>Shipping Weight (kg)</label>
                 <input {...register('shippingInfo.weight')} type="number" step="0.01" placeholder="Weight" className="form-control" />
-              </Col>
-              <Col lg={3} className="mb-3">
-                <label>Shipping Cost</label>
-                <input {...register('shippingInfo.shippingCost')} type="number" step="0.01" placeholder="Cost" className="form-control" />
-              </Col>
-              <Col lg={3} className="mb-3">
-                <label>Estimated Delivery</label>
-                <input {...register('shippingInfo.estimatedDelivery')} placeholder="e.g., 3-5 days" className="form-control" />
-              </Col>
-              <Col lg={3} className="mb-3">
-                <div className="mt-4">
-                  <div className="form-check">
-                    <input type="checkbox" {...register('shippingInfo.freeShipping')} className="form-check-input" id="freeShipping" />
-                    <label className="form-check-label" htmlFor="freeShipping">
-                      Free Shipping
-                    </label>
-                  </div>
-                </div>
               </Col>
             </Row>
           </CardBody>
