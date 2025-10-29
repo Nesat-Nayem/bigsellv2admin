@@ -1,7 +1,7 @@
 'use client'
 
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
-import { useDeleteBlogMutation, useGetBlogsQuery } from '@/store/blogApi'
+import { useDeleteTeamMutation, useGetTeamsQuery } from '@/store/teamApi'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useState } from 'react'
@@ -16,15 +16,15 @@ const TeamList = () => {
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success')
   const [showToast, setShowToast] = useState(false)
 
-  const { data: blogData = [], isLoading, isError } = useGetBlogsQuery()
+  const { data: teamData = [], isLoading, isError } = useGetTeamsQuery()
 
-  const [deleteBlog, { isLoading: isDeleting }] = useDeleteBlogMutation()
+  const [deleteTeam, { isLoading: isDeleting }] = useDeleteTeamMutation()
 
   if (isLoading) return <div>Loading...</div>
   if (isError) return <div>Error loading movies</div>
 
-  //   filter eventsData by title + category
-  const filteredBlog = blogData.filter((blog: any) => [blog.title, blog.category].join(' ').toLowerCase().includes(searchTerm.toLowerCase()))
+  //   filter by name + designation
+  const filteredBlog = teamData.filter((team: any) => [team.name, team.designation].join(' ').toLowerCase().includes(searchTerm.toLowerCase()))
 
   //   pagination
   const itemsPerPage = 5
@@ -49,11 +49,11 @@ const TeamList = () => {
   //   Delete handler
   const handleDelete = async (id: string) => {
     try {
-      await deleteBlog(id).unwrap()
-      showMessage('Blog deleted successfully!', 'success')
+      await deleteTeam(id).unwrap()
+      showMessage('Team deleted successfully!', 'success')
     } catch (error: any) {
       console.error('Delete failed:', error)
-      showMessage(error?.data?.message || 'Failed to delete Blog', 'error')
+      showMessage(error?.data?.message || 'Failed to delete Team', 'error')
     }
   }
 
@@ -95,27 +95,27 @@ const TeamList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((blog: any) => (
-                    <tr key={blog._id}>
+                  {currentItems.map((team: any) => (
+                    <tr key={team._id}>
                       <td>
                         {
                           //   image
-                          blog.image ? (
-                            <Image src={blog.image} alt="blog-1" width={50} height={50} className="rounded" />
+                          team.image ? (
+                            <Image src={team.image} alt="team-1" width={50} height={50} className="rounded" />
                           ) : (
                             <Image src="/images/blog/blog-1.jpg" alt="blog-1" width={50} height={50} className="rounded" />
                           )
                         }
                       </td>
-                      <td>{blog.title}</td>
-                      <td>{blog.category}</td>
+                      <td>{team.name}</td>
+                      <td>{team.designation}</td>
 
                       <td>
                         <div className="d-flex gap-2">
-                          <Link href={`/team/edit-team/${blog._id}`} className="btn btn-soft-primary btn-sm">
+                          <Link href={`/pages/team/edit-team/${team._id}`} className="btn btn-soft-primary btn-sm">
                             <IconifyIcon icon="solar:pen-2-broken" className="align-middle fs-18" />
                           </Link>
-                          <Link href="" className="btn btn-soft-danger btn-sm" onClick={() => handleDelete(blog._id)}>
+                          <Link href="" className="btn btn-soft-danger btn-sm" onClick={() => handleDelete(team._id)}>
                             <IconifyIcon icon="solar:trash-bin-minimalistic-2-broken" className="align-middle fs-18" />
                           </Link>
                         </div>

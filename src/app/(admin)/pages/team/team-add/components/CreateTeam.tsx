@@ -1,8 +1,7 @@
 'use client'
 
 import IconifyIcon from '@/components/wrappers/IconifyIcon'
-import { useCreateBlogMutation, useDeleteBlogMutation } from '@/store/blogApi'
-import { useGetBlogCategoriesQuery } from '@/store/blogCategoryApi'
+import { useCreateTeamMutation } from '@/store/teamApi'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
@@ -11,11 +10,8 @@ import { useForm, Controller, Resolver } from 'react-hook-form'
 import * as yup from 'yup'
 
 interface FormValues {
-  title: string
-  shortDesc: string
-  longDesc: string
-  category: string
-  status: string
+  name: string
+  designation: string
   image: FileList
 }
 
@@ -27,15 +23,11 @@ const CreateTeam = () => {
   const router = useRouter()
 
   // redux
-  const [createBlog, { isLoading }] = useCreateBlogMutation()
-  const { data: blogCategory, isLoading: blogCategoryLoading } = useGetBlogCategoriesQuery()
+  const [createTeam, { isLoading }] = useCreateTeamMutation()
 
   const schema = yup.object({
-    title: yup.string().required('Please enter title'),
-    shortDesc: yup.string().required('Please enter short description'),
-    longDesc: yup.string().required('Please enter long description'),
-    category: yup.string().required('Please select category'),
-    status: yup.string().required('Please select status'),
+    name: yup.string().required('Please enter name'),
+    designation: yup.string().required('Please enter designation'),
     image: yup.mixed<FileList>().test('required', 'Image is required', (value) => value && value.length > 0),
   })
 
@@ -60,21 +52,18 @@ const CreateTeam = () => {
       return
     }
     const formData = new FormData()
-    formData.append('title', values.title)
-    formData.append('shortDesc', values.shortDesc)
-    formData.append('longDesc', values.longDesc)
-    formData.append('category', values.category)
-    formData.append('status', values.status)
+    formData.append('name', values.name)
+    formData.append('designation', values.designation)
     formData.append('image', values.image[0])
 
     try {
-      await createBlog(formData).unwrap()
-      showMessage('Blog created successfully!', 'success')
+      await createTeam(formData).unwrap()
+      showMessage('Team created successfully!', 'success')
       reset()
-      setTimeout(() => router.push('/blog/blog-list'), 2000)
+      setTimeout(() => router.push('/pages/team/team-list'), 2000)
     } catch (err: any) {
       console.error('Error:', err)
-      showMessage(err?.data?.message || 'Failed to create blog', 'error')
+      showMessage(err?.data?.message || 'Failed to create team', 'error')
     }
   }
 
@@ -112,7 +101,7 @@ const CreateTeam = () => {
               <Col lg={6}>
                 <Controller
                   control={control}
-                  name="title"
+                  name="name"
                   render={({ field, fieldState }) => (
                     <div className="mb-3">
                       <label htmlFor="title" className="form-label">
@@ -128,11 +117,11 @@ const CreateTeam = () => {
               <Col lg={6}>
                 <Controller
                   control={control}
-                  name="title"
+                  name="designation"
                   render={({ field, fieldState }) => (
                     <div className="mb-3">
                       <label htmlFor="title" className="form-label">
-                        Desition
+                        Designation
                       </label>
                       <input type="text" id="title" className="form-control" {...field} />
                       {fieldState.error && <small className="text-danger">{fieldState.error.message}</small>}

@@ -1,7 +1,6 @@
 'use client'
 
-import { useGetBlogByIdQuery, useUpdateBlogMutation } from '@/store/blogApi'
-import { useGetBlogCategoriesQuery } from '@/store/blogCategoryApi'
+import { useGetTeamByIdQuery, useUpdateTeamMutation } from '@/store/teamApi'
 import { yupResolver } from '@hookform/resolvers/yup'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
@@ -12,21 +11,15 @@ import * as yup from 'yup'
 
 //   Define Form types
 interface FormValues {
-  title: string
-  shortDesc: string
-  longDesc: string
-  category: string
-  status: string
+  name: string
+  designation: string
   image?: File
 }
 
 //   Validation schema
 const messageSchema = yup.object().shape({
-  title: yup.string().required('Please enter title'),
-  shortDesc: yup.string().required('Please enter short description'),
-  longDesc: yup.string().required('Please enter long description'),
-  category: yup.string().required('Please select category'),
-  status: yup.string().required('Please select status'),
+  name: yup.string().required('Please enter name'),
+  designation: yup.string().required('Please enter designation'),
 })
 
 const EditTeam = () => {
@@ -37,48 +30,41 @@ const EditTeam = () => {
 
   const router = useRouter()
   const params = useParams()
-  const blogId = typeof params?.id === 'string' ? params.id : undefined
+  const teamId = typeof params?.id === 'string' ? params.id : undefined
 
   const {
-    data: blog,
+    data: team,
     isFetching,
     isError,
-  } = useGetBlogByIdQuery(blogId!, {
-    skip: !blogId,
+  } = useGetTeamByIdQuery(teamId!, {
+    skip: !teamId,
   })
-  const [updateBlog, { isLoading }] = useUpdateBlogMutation()
-  const { data: blogCategory, isLoading: blogCategoryLoading } = useGetBlogCategoriesQuery()
+  const [updateTeam, { isLoading }] = useUpdateTeamMutation()
   //   useForm strictly typed
   const { reset, handleSubmit, control } = useForm<FormValues>({
     resolver: yupResolver(messageSchema),
     defaultValues: {
-      title: '',
-      shortDesc: '',
-      longDesc: '',
-      category: '',
-      status: '',
+      name: '',
+      designation: '',
       image: undefined,
     },
   })
   //   Populate when blog loads
   useEffect(() => {
-    if (blog) {
+    if (team) {
       reset({
-        title: blog.title || '',
-        shortDesc: blog.shortDesc || '',
-        longDesc: blog.longDesc || '',
-        category: blog.category || '',
-        status: blog.status || '',
+        name: team.name || '',
+        designation: team.designation || '',
         image: undefined,
       })
       //   set preview from API if exists
-      if (typeof blog.image === 'string') {
-        setImagePreview(blog.image)
+      if (typeof team.image === 'string') {
+        setImagePreview(team.image)
       } else {
         setImagePreview(null)
       }
     }
-  }, [blog, reset])
+  }, [team, reset])
 
   const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     setToastMessage(msg)
@@ -87,33 +73,30 @@ const EditTeam = () => {
   }
 
   const onSubmit = async (values: FormValues) => {
-    if (!blogId) return
+    if (!teamId) return
     const formData = new FormData()
-    formData.append('title', values.title)
-    formData.append('status', values.status)
-    formData.append('shortDesc', values.shortDesc)
-    formData.append('longDesc', values.longDesc)
-    formData.append('category', values.category)
+    formData.append('name', values.name)
+    formData.append('designation', values.designation)
     if (values.image) formData.append('image', values.image)
 
     try {
-      await updateBlog({ id: blogId, data: formData }).unwrap()
-      showMessage('Blog updated successfully!', 'success')
-      setTimeout(() => router.push('/blog/blog-list'), 1500)
+      await updateTeam({ id: teamId, data: formData }).unwrap()
+      showMessage('Team updated successfully!', 'success')
+      setTimeout(() => router.push('/pages/team/team-list'), 1500)
     } catch (err: any) {
       console.error('Update Error:', err)
-      showMessage(err?.data?.message || 'Failed to update blog', 'error')
+      showMessage(err?.data?.message || 'Failed to update team', 'error')
     }
   }
 
-  if (!blogId) return <div className="text-danger">Invalid Blog ID</div>
+  if (!teamId) return <div className="text-danger">Invalid Team ID</div>
   if (isFetching)
     return (
       <div className="text-center py-5">
         <Spinner animation="border" />
       </div>
     )
-  if (isError) return <div className="text-danger">Failed to load Blog data.</div>
+  if (isError) return <div className="text-danger">Failed to load Team data.</div>
 
   return (
     <>
@@ -165,7 +148,7 @@ const EditTeam = () => {
               <Col lg={6}>
                 <Controller
                   control={control}
-                  name="title"
+                  name="name"
                   render={({ field, fieldState }) => (
                     <div className="mb-3">
                       <label className="form-label">Name</label>
@@ -178,10 +161,10 @@ const EditTeam = () => {
               <Col lg={6}>
                 <Controller
                   control={control}
-                  name="title"
+                  name="designation"
                   render={({ field, fieldState }) => (
                     <div className="mb-3">
-                      <label className="form-label">Destination</label>
+                      <label className="form-label">Designation</label>
                       <input type="text" className="form-control" {...field} />
                       {fieldState.error && <small className="text-danger">{fieldState.error.message}</small>}
                     </div>

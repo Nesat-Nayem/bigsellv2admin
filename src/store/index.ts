@@ -27,6 +27,7 @@ import { subscriptionApi } from './subscriptionApi'
 import { subscriptionIncludesApi } from './subscriptionIncludesApi'
 import { sellerApi } from './sellerApi'
 import { couponApi } from './couponApi'
+import { teamApi } from './teamApi'
 
 export const store = configureStore({
   reducer: {
@@ -42,6 +43,7 @@ export const store = configureStore({
     [faqApi.reducerPath]: faqApi.reducer,
     [blogCategoryApi.reducerPath]: blogCategoryApi.reducer,
     [blogApi.reducerPath]: blogApi.reducer,
+    [teamApi.reducerPath]: teamApi.reducer,
     [headerBannerApi.reducerPath]: headerBannerApi.reducer,
     [mainBannerApi.reducerPath]: mainBannerApi.reducer,
     [aboutApi.reducerPath]: aboutApi.reducer,
@@ -74,6 +76,7 @@ export const store = configureStore({
       faqApi.middleware,
       blogCategoryApi.middleware,
       blogApi.middleware,
+      teamApi.middleware,
       headerBannerApi.middleware,
       mainBannerApi.middleware,
       aboutApi.middleware,
