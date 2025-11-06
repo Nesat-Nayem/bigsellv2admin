@@ -98,7 +98,7 @@ const SimpleCategoryList = () => {
                     className="ms-2"
                     onClick={() => {
                       // Test direct API call
-                      fetch('https://api.atpuae.com/v1/api/productsCategory')
+                      fetch('http://localhost:8080/v1/api/productsCategory')
                         .then(res => {
                           console.log('Direct API Response Status:', res.status)
                           return res.json()
