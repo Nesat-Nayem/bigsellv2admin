@@ -20,7 +20,7 @@ export const blogCategoryApi = createApi({
   reducerPath: 'blogCategoryApi',
   baseQuery: fetchBaseQuery({
     credentials: 'include',
-    baseUrl: 'https://api.atpuae.com/v1/api',
+    baseUrl: 'http://localhost:8080/v1/api',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as IRootState).auth.token
       if (token) {
