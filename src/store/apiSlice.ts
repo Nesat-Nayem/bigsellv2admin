@@ -39,7 +39,7 @@ export interface ConfirmResetEmailRequest { email: string; otp: string; newPassw
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://api.bigsell.org/v1/api',
+    baseUrl: 'http://localhost:8080/v1/api',
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as IRootState)?.auth?.token
